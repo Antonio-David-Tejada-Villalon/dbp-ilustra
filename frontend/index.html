@@ -6,6 +6,12 @@
     <meta name="description" content="DBP Ilustra: ilustradores, dibujantes, historietistas y creadores de manga de San Juan." />
     <meta name="theme-color" content="#5b2bd9" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Ilustra" />
     <title>DBP Ilustra</title>
     <script>
       (function () {
@@ -14,6 +20,9 @@
           if (t === "auto") t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "nocturno" : "papel";
           document.documentElement.setAttribute("data-theme", t);
         } catch (e) {}
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
+        }
       })();
     </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
