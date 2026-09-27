@@ -1,0 +1,91 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrahead %}{{ block.super }}
+{% if user.is_authenticated and user.is_staff %}
+<style>
+  #ilustra-help-btn {
+    position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+    width: 52px; height: 52px; border-radius: 50%; border: none;
+    background: #5b2bd9; color: #fff; font-size: 22px; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,.35);
+  }
+  #ilustra-help-panel {
+    position: fixed; bottom: 84px; right: 20px; z-index: 1000;
+    width: 340px; max-width: calc(100vw - 40px); height: 440px; max-height: calc(100vh - 120px);
+    background: #1c1a22; color: #f2f0f6; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.5);
+    display: none; flex-direction: column; overflow: hidden; font-family: sans-serif;
+  }
+  #ilustra-help-panel.open { display: flex; }
+  #ilustra-help-head { background: #5b2bd9; padding: 10px 14px; font-weight: bold; font-size: 14px; }
+  #ilustra-help-log { flex: 1; overflow-y: auto; padding: 10px 12px; font-size: 13px; line-height: 1.45; }
+  #ilustra-help-log .msg { margin-bottom: 10px; white-space: pre-wrap; }
+  #ilustra-help-log .msg.user { color: #c9bdf2; }
+  #ilustra-help-log .msg.bot { color: #f2f0f6; }
+  #ilustra-help-form { display: flex; border-top: 1px solid #2c2936; }
+  #ilustra-help-input {
+    flex: 1; border: none; background: transparent; color: #f2f0f6; padding: 10px 12px; font-size: 13px;
+  }
+  #ilustra-help-input:focus { outline: none; }
+  #ilustra-help-send { border: none; background: transparent; color: #5b2bd9; font-weight: bold; padding: 0 14px; cursor: pointer; }
+  #ilustra-help-hint { padding: 6px 12px; font-size: 11px; color: #8b86a0; }
+</style>
+{% endif %}
+{% endblock %}
+
+{% block footer %}{{ block.super }}
+{% if user.is_authenticated and user.is_staff %}
+<button id="ilustra-help-btn" type="button" title="Ayuda del panel" aria-label="Ayuda del panel">?</button>
+<div id="ilustra-help-panel">
+  <div id="ilustra-help-head">Ayuda del panel</div>
+  <div id="ilustra-help-log"></div>
+  <p id="ilustra-help-hint">Preguntá cómo hacer algo en este panel de administración.</p>
+  <form id="ilustra-help-form">
+    <input id="ilustra-help-input" type="text" autocomplete="off" placeholder="Ej: ¿cómo agrego un moderador?" maxlength="800">
+    <button id="ilustra-help-send" type="submit">Enviar</button>
+  </form>
+</div>
+<script>
+(function () {
+  function getCookie(name) {
+    var m = document.cookie.match("(?:^|; )" + name + "=([^;]*)");
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+  var btn = document.getElementById("ilustra-help-btn");
+  var panel = document.getElementById("ilustra-help-panel");
+  var log = document.getElementById("ilustra-help-log");
+  var form = document.getElementById("ilustra-help-form");
+  var input = document.getElementById("ilustra-help-input");
+
+  btn.addEventListener("click", function () { panel.classList.toggle("open"); });
+
+  function addMsg(role, text) {
+    var d = document.createElement("div");
+    d.className = "msg " + role;
+    d.textContent = text;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var text = input.value.trim();
+    if (!text) return;
+    addMsg("user", text);
+    input.value = "";
+    input.disabled = true;
+    fetch("/admin/asistente/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+      body: JSON.stringify({ message: text }),
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (res) {
+        addMsg("bot", res.ok ? res.data.reply : (res.data.detail || "Ocurrió un error."));
+      })
+      .catch(function () { addMsg("bot", "No hay conexión con el servidor."); })
+      .finally(function () { input.disabled = false; input.focus(); });
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}
