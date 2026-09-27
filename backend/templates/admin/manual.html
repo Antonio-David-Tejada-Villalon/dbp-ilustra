@@ -1,0 +1,122 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Inicio</a> &rsaquo; Manual de administración</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" style="max-width: 860px; line-height: 1.6;">
+
+<p style="color: var(--body-quiet-color, #666); margin-top: 0;">Última actualización: 27 de septiembre de 2026.</p>
+
+<p>Este manual explica cómo usar el panel de administración (<code>/admin/</code>) de DBP Ilustra:
+qué hace cada sección del menú, quién puede entrar y cómo moderar el contenido del sitio.</p>
+
+<h2>1. Cómo entrar al panel</h2>
+<p>Hay dos tipos de acceso a <code>/admin/</code>:</p>
+<ul>
+  <li><strong>Superusuario</strong>: usuario y contraseña propios de Django, sin relación con el login
+  de Google del sitio público. Ve y puede editar todo, incluyendo la sección Moderadores.</li>
+  <li><strong>Moderador</strong>: alguien que primero entró al sitio público con su cuenta de Google, y
+  después un superusuario le creó un registro en Moderadores con permisos limitados (por categoría y
+  por tipo de acción). Un moderador entra a <code>/admin/</code> con usuario y contraseña que le asigne
+  el superusuario, o directamente desde el sitio con su misma sesión de Google si es staff.</li>
+</ul>
+<p>Los superusuarios se crean por línea de comandos (<code>python manage.py createsuperuser</code>) o
+desde <strong>Usuarios</strong>, en Autenticación y Autorización.</p>
+
+<h2>2. Moderar obras, series y capítulos</h2>
+<p>En el menú <strong>DBP Ilustra</strong> hay tres secciones para el contenido publicado:
+<strong>Obras</strong>, <strong>Series</strong> y <strong>Capítulos</strong>. Las tres funcionan igual:</p>
+<ul>
+  <li>Se pueden filtrar por estado, categoría y fecha, y buscar por título o autor.</li>
+  <li>Acción <strong>Ocultar (moderación)</strong>: saca el contenido de la vista pública sin borrarlo.</li>
+  <li>Acción <strong>Volver a publicar / mostrar</strong>: lo vuelve a hacer visible.</li>
+  <li>Cada Serie tiene sus Capítulos editables ahí mismo, como una lista dentro de la misma pantalla.</li>
+  <li>Solo el superusuario puede agregar o borrar obras/series desde el panel; los moderadores solo
+  pueden cambiar el estado y la nota de moderación, sobre las categorías que tengan asignadas.</li>
+</ul>
+
+<h2>3. Moderar comentarios</h2>
+<p>En <strong>Comentarios</strong> aparecen todos los comentarios del sitio, con la columna
+<strong>En</strong> indicando si pertenecen a una obra o a un capítulo. Mismas acciones que en Obras:
+<strong>Ocultar (moderación)</strong> y <strong>Volver a publicar / mostrar</strong>. Un moderador solo
+ve los comentarios de las categorías que tenga asignadas (o todos, si no tiene categorías
+restringidas).</p>
+
+<h2>4. Gestionar reportes</h2>
+<p>Cuando alguien usa el botón de bandera en el sitio, aparece en <strong>Reportes</strong>. La columna
+<strong>Contenido</strong> linkea directo a lo reportado (obra, capítulo, comentario o perfil).
+Acciones:</p>
+<ul>
+  <li><strong>Marcar como resuelto</strong>: cierra el reporte, dejando registrado quién lo resolvió.</li>
+  <li><strong>Descartar</strong>: lo cierra sin tomar acción.</li>
+</ul>
+<p>Resolver o descartar un reporte no oculta el contenido solo: si hace falta, hay que ir además a
+Obras/Series/Capítulos/Comentarios y ocultarlo ahí.</p>
+
+<h2>5. Perfiles: suspender usuarios</h2>
+<p><strong>Perfiles</strong> lista las cuentas del sitio público (buscables por usuario, nombre o
+email). Acciones:</p>
+<ul>
+  <li><strong>Suspender</strong>: la persona no puede publicar ni comentar en el sitio hasta que se le
+  quite la suspensión.</li>
+  <li><strong>Quitar suspensión</strong>: revierte lo anterior y borra el motivo guardado.</li>
+</ul>
+<p>Un perfil suspendido sigue existiendo (no se borra la cuenta ni sus obras), solo pierde la
+posibilidad de interactuar.</p>
+
+<h2>6. Agregar y configurar moderadores</h2>
+<p>Esta sección <strong>solo la ve el superusuario</strong>. Para dar acceso al panel a alguien:</p>
+<ol>
+  <li>La persona tiene que haber entrado antes al sitio público con su cuenta de Google (así ya existe
+  su usuario).</li>
+  <li>Ir a <strong>Moderadores → Agregar</strong> y elegir su usuario.</li>
+  <li>Elegir las <strong>categorías</strong> a su cargo (ilustración, cómic, manga, historieta, boceto).
+  Dejarlo vacío significa que modera todas.</li>
+  <li>Marcar los permisos que le correspondan: moderar obras y series, moderar comentarios, gestionar
+  reportes, suspender usuarios, gestionar proyectos DBP y preguntas frecuentes.</li>
+  <li>Guardar. La persona ya puede entrar a <code>/admin/</code> y va a ver solo las secciones y
+  categorías para las que tiene permiso.</li>
+</ol>
+<p>Desmarcar <strong>Activo</strong> le saca el acceso sin borrar el registro (se puede reactivar
+después).</p>
+
+<h2>7. Proyectos DBP</h2>
+<p>En <strong>Proyectos DBP</strong> se cargan convocatorias, talleres o novedades que aparecen en la
+sección Descubrir del sitio público. Desde el listado se puede activar/desactivar y reordenar
+directamente (columnas editables).</p>
+<p>Acción <strong>Enviar aviso a todos los usuarios</strong>: crea una notificación para cada cuenta
+activa del sitio. <strong>No tiene vuelta atrás</strong>, usarla solo cuando el proyecto esté listo para
+anunciarse.</p>
+
+<h2>8. Preguntas frecuentes (FAQ)</h2>
+<p>Esta sección alimenta al <strong>asistente público</strong> del sitio (el que ven los visitantes, no
+este panel). Cada pregunta y respuesta que se cargue y se deje marcada <strong>Activa</strong> se le
+pasa como contexto al asistente para que responda mejor.</p>
+<p>Conviene cargar ahí preguntas reales de los visitantes: cómo publicar, cómo funciona la protección de
+las obras, cómo reportar contenido, etc. No cargar ahí instrucciones internas del panel: para eso está
+la sección 9.</p>
+
+<h2>9. El asistente interno del panel</h2>
+<p>Abajo a la derecha, dentro de <code>/admin/</code>, hay un botón morado con un signo de pregunta. Es
+un asistente de IA (Gemini) distinto del que ven los visitantes del sitio: solo lo ven las cuentas de
+staff logueadas, y solo sabe explicar cómo usar este panel (no sabe de publicar obras del lado del
+artista ni del login de Google público).</p>
+<p>Sirve para preguntas como "¿cómo agrego un moderador?", "¿qué hace la acción enviar aviso?", o
+"¿dónde muevo un reporte resuelto?". Si no sabe algo, lo va a decir en vez de inventar una respuesta.</p>
+
+<h2>Buenas prácticas</h2>
+<ul>
+  <li>No compartas tu usuario y contraseña del panel; cada persona con acceso debería tener su propia
+  cuenta.</li>
+  <li>Antes de usar <strong>Enviar aviso a todos los usuarios</strong> o <strong>Suspender</strong>,
+  confirmá que es lo que querés hacer: no tienen deshacer sencillo.</li>
+  <li>Las Preguntas frecuentes son públicas para el asistente del sitio: no cargues ahí datos internos
+  ni nada que no le mostrarías a un visitante.</li>
+  <li>Si algo no está en este manual, preguntale al asistente interno del panel o revisá este documento,
+  que se puede actualizar con el tiempo.</li>
+</ul>
+
+</div>
+{% endblock %}

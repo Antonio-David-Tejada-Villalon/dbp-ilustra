@@ -7,6 +7,7 @@ import json
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from fastapi import HTTPException
@@ -88,3 +89,10 @@ def assistant_view(request):
     except Exception:
         return JsonResponse({"detail": "El asistente no está disponible en este momento. Probá de nuevo."}, status=502)
     return JsonResponse({"reply": reply or "No encontré una respuesta. Probá reformular la pregunta."})
+
+
+@staff_member_required
+def manual_view(request):
+    from django.contrib import admin
+
+    return render(request, "admin/manual.html", admin.site.each_context(request) | {"title": "Manual de administración"})

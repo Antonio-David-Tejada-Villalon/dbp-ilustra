@@ -1,5 +1,12 @@
 {% extends "admin/base_site.html" %}
 
+{% block userlinks %}
+{% if user.is_authenticated and user.is_staff %}
+<a href="{% url 'ilustra-manual' %}">Manual</a> /
+{% endif %}
+{{ block.super }}
+{% endblock %}
+
 {% block extrahead %}{{ block.super }}
 {% if user.is_authenticated and user.is_staff %}
 <style>
@@ -38,7 +45,7 @@
 <div id="ilustra-help-panel">
   <div id="ilustra-help-head">Ayuda del panel</div>
   <div id="ilustra-help-log"></div>
-  <p id="ilustra-help-hint">Preguntá cómo hacer algo en este panel de administración.</p>
+  <p id="ilustra-help-hint">Preguntá cómo hacer algo en este panel, o mirá el <a href="{% url 'ilustra-manual' %}">manual completo</a>.</p>
   <form id="ilustra-help-form">
     <input id="ilustra-help-input" type="text" autocomplete="off" placeholder="Ej: ¿cómo agrego un moderador?" maxlength="800">
     <button id="ilustra-help-send" type="submit">Enviar</button>
