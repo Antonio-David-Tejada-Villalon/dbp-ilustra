@@ -6,7 +6,7 @@ import Category from "./pages/Category";
 import Community from "./pages/Community";
 import Discover from "./pages/Discover";
 import Home from "./pages/Home";
-import { Me, NotFound } from "./pages/Misc";
+import { Me, NotFound, Privacy } from "./pages/Misc";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Publish from "./pages/Publish";
@@ -35,6 +35,7 @@ export default function App() {
         <Route path="ajustes" element={<Settings />} />
         <Route path="buscar" element={<Search />} />
         <Route path="yo" element={<Me />} />
+        <Route path="privacidad" element={<Privacy />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
