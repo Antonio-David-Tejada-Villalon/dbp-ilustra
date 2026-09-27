@@ -68,3 +68,51 @@ export function Privacy() {
     </div>
   );
 }
+
+export function Terms() {
+  useTitle("Términos de servicio");
+  return (
+    <div className="app-wrap" style={{ maxWidth: 720, lineHeight: 1.6 }}>
+      <h1>Términos de servicio</h1>
+      <p className="small">Última actualización: septiembre de 2026.</p>
+
+      <p>DBP Ilustra es una plataforma de la Dirección de Bibliotecas Populares y Actividades
+      Literarias de San Juan para que ilustradores, historietistas y creadores de manga publiquen
+      su obra, armen su muro y conversen con el público. Al usar el sitio aceptás estos términos.</p>
+
+      <h2>Tu cuenta</h2>
+      <p>Ingresás con tu cuenta de Google. Sos responsable de lo que publiques y de la actividad
+      que ocurra desde tu cuenta.</p>
+
+      <h2>Contenido que publicás</h2>
+      <ul>
+        <li>Las obras te pertenecen a vos. Al publicarlas, le das a DBP Ilustra el permiso para
+        mostrarlas en el sitio (reducidas y con marca de agua, como se explica en la
+        Privacidad).</li>
+        <li>Solo podés publicar contenido del que tengas los derechos, mediante un enlace directo
+        a una imagen pública.</li>
+        <li>No está permitido publicar contenido ilegal, que infrinja derechos de terceros, o que
+        acose o discrimine a otras personas.</li>
+      </ul>
+
+      <h2>Moderación</h2>
+      <p>El equipo de moderadores y administradores puede ocultar o quitar obras, comentarios o
+      cuentas que incumplan estas reglas, y gestionar los reportes que envíe la comunidad.</p>
+
+      <h2>Protección de las obras</h2>
+      <p>El sitio reduce y marca con agua las imágenes para dificultar su descarga, pero esto es
+      una medida disuasiva: nada impide una captura de pantalla. La versión original sigue siendo
+      pública en el servicio donde vos la subiste.</p>
+
+      <h2>Sin garantías</h2>
+      <p>El sitio se ofrece "tal cual". No garantizamos disponibilidad continua ni la persistencia
+      de los enlaces de imágenes que aloja cada artista en servicios externos.</p>
+
+      <h2>Cambios</h2>
+      <p>Podemos actualizar estos términos; vamos a cambiar la fecha de arriba cuando lo hagamos.</p>
+
+      <h2>Contacto</h2>
+      <p>Consultas a <a href="mailto:4vdel777@gmail.com">4vdel777@gmail.com</a>.</p>
+    </div>
+  );
+}
