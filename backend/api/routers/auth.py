@@ -118,6 +118,7 @@ def me(user=Depends(current_user)):
         **serialize.person(user), "email": user.email, "isArtist": p.is_artist, "isStaff": user.is_staff,
         "bio": p.bio, "location": p.location, "contact": p.contact, "disciplines": p.disciplines, "accent": p.accent,
         "coverUrl": p.cover_url, "cover": f"/api/img/u/{p.handle}/cover" if p.cover_url else None, "suspended": p.suspended,
+        "watermarkEnabled": p.watermark_enabled,
         "unread": Notification.objects.filter(recipient=user, read=False).count(),
     }}
 
@@ -132,6 +133,7 @@ class ProfileIn(BaseModel):
     accent: str | None = None
     cover_url: str | None = Field(None, max_length=1000)
     is_artist: bool | None = None
+    watermark_enabled: bool | None = None
 
 
 @router.patch("/me/profile")
@@ -161,7 +163,7 @@ def update_profile(body: ProfileIn, request: Request, user=Depends(writer)):
             except ImageURLError as e:
                 raise HTTPException(422, f"Portada: {e}")
         p.cover_url = url
-    for field in ("display_name", "bio", "location", "contact", "is_artist"):
+    for field in ("display_name", "bio", "location", "contact", "is_artist", "watermark_enabled"):
         if field in data and data[field] is not None:
             setattr(p, field, data[field].strip() if isinstance(data[field], str) else data[field])
     try:

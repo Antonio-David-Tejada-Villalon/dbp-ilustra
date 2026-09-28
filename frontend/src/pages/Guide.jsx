@@ -47,11 +47,14 @@ export default function Guide() {
       </ol>
 
       <h2>4. Cómo se protegen tus obras</h2>
-      <p>El sitio nunca muestra el enlace original de tu imagen: la sirve reducida (máx. 1600 px), en
-      formato WEBP y con tu marca de agua (@usuario · DBP Ilustra). También bloquea el clic derecho, el
-      arrastre y la selección sobre la imagen.</p>
-      <p>Esto es una <strong>medida disuasiva</strong>, no una garantía: nada impide una captura de
-      pantalla. El archivo original sigue estando donde vos lo subiste.</p>
+      <p>El sitio <strong>nunca</strong> muestra el enlace original de tu imagen: siempre la sirve
+      reducida (máx. 1600 px) en formato WEBP, y bloquea el clic derecho, el arrastre y la selección
+      sobre la imagen. Esto pasa siempre, lo elijas o no.</p>
+      <p>Además, en <Link to="/ajustes">Ajustes</Link> podés activar una marca de agua opcional
+      («@tuusuario · DBP Ilustra» superpuesto de forma sutil) como firma extra sobre tus obras. Está
+      desactivada por defecto para que se vean limpias; vos decidís si la activás.</p>
+      <p>Ninguna de las dos cosas es una <strong>garantía</strong>: nada impide una captura de pantalla.
+      El archivo original sigue estando donde vos lo subiste.</p>
 
       <h2>5. Comunidad</h2>
       <p>Con tu cuenta podés dar me gusta, comentar (y responder comentarios), seguir a otros artistas,

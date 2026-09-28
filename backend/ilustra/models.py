@@ -33,6 +33,7 @@ class Profile(models.Model):
     is_artist = models.BooleanField("es artista", default=False)
     accent = models.CharField("acento del muro", max_length=10, choices=ACCENT_CHOICES, default="violet")
     cover_url = models.URLField("portada", max_length=1000, blank=True)
+    watermark_enabled = models.BooleanField("marca de agua en mis obras", default=False)
     suspended = models.BooleanField("suspendido", default=False)
     suspended_reason = models.CharField(max_length=200, blank=True)
     is_demo = models.BooleanField(default=False)

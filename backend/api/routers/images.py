@@ -25,7 +25,9 @@ def _serve(source, w, mark):
 
 def _mark(user):
     p = getattr(user, "profile", None)
-    return f"@{p.handle} · DBP Ilustra" if p else "DBP Ilustra"
+    if not p or not p.watermark_enabled:
+        return None
+    return f"@{p.handle} · DBP Ilustra"
 
 
 def _pub(user):

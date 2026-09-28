@@ -164,9 +164,10 @@ def get_chapter(series_id: int, number: int, user=Depends(current_user)):
     prev = qs.filter(number__lt=number).order_by("-number").values_list("number", flat=True).first()
     nxt = qs.filter(number__gt=number).order_by("number").values_list("number", flat=True).first()
     own = bool(user and user.pk == s.author_id)
+    wm = serialize.wm_flag(s.author)
     return {
         "series": serialize.series(s), "number": ch.number, "title": ch.title, "id": ch.pk,
-        "pages": [{"id": p.pk, "image": f"/api/img/p/{p.pk}", "ratio": p.ratio,
+        "pages": [{"id": p.pk, "image": f"/api/img/p/{p.pk}?wm={wm}", "ratio": p.ratio,
                    **({"url": p.image_url} if own else {})} for p in ch.pages.all()],
         "prev": prev, "next": nxt, "likes": ch.like_count, "comments": ch.comment_count,
         "liked": bool(user and Like.objects.filter(user=user, chapter=ch).exists()),

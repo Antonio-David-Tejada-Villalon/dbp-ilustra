@@ -34,10 +34,17 @@ def person(user):
     return {"id": user.pk, "name": p.display_name, "handle": "@" + p.handle, "slug": p.handle, "avatar": avatar(p)}
 
 
+def wm_flag(user):
+    """Un dígito que cambia junto con la marca de agua del autor, para que el navegador no
+    siga mostrando la versión vieja de la imagen (con o sin marca) desde su caché."""
+    p = getattr(user, "profile", None)
+    return "1" if p and p.watermark_enabled else "0"
+
+
 def artwork(a, liked=False, saved=False):
     return {
         "id": a.pk, "title": a.title, "description": a.description, "category": a.category, "tags": a.tags,
-        "image": f"/api/img/a/{a.pk}", "ratio": a.ratio, "artist": person(a.author),
+        "image": f"/api/img/a/{a.pk}?wm={wm_flag(a.author)}", "ratio": a.ratio, "artist": person(a.author),
         "likes": a.like_count, "comments": a.comment_count, "liked": liked, "saved": saved,
         "status": a.status, "created": a.created.isoformat(), "date": timezone.localtime(a.created).strftime("%d/%m/%Y"),
     }
@@ -45,7 +52,7 @@ def artwork(a, liked=False, saved=False):
 
 def series(s, chapters=None):
     d = {"id": s.pk, "title": s.title, "description": s.description, "category": s.category,
-         "cover": f"/api/img/s/{s.pk}", "ratio": round(s.cover_width / s.cover_height, 4) if s.cover_width and s.cover_height else 0.75,
+         "cover": f"/api/img/s/{s.pk}?wm={wm_flag(s.author)}", "ratio": round(s.cover_width / s.cover_height, 4) if s.cover_width and s.cover_height else 0.75,
          "artist": person(s.author), "status": s.status, "updated": s.updated.isoformat()}
     if chapters is not None:
         d["chapters"] = [{"number": c.number, "title": c.title, "likes": c.like_count, "comments": c.comment_count,

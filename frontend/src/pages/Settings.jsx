@@ -23,7 +23,8 @@ export default function Settings() {
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (user) setF({ display_name: user.name, handle: user.slug, bio: user.bio, location: user.location, contact: user.contact || "",
-      disciplines: user.disciplines, accent: user.accent, cover_url: user.coverUrl, is_artist: user.isArtist });
+      disciplines: user.disciplines, accent: user.accent, cover_url: user.coverUrl, is_artist: user.isArtist,
+      watermark_enabled: user.watermarkEnabled });
   }, [user]);
   if (user === undefined) return <Loading />;
   if (!user) return <div className="app-wrap"><Empty title="Ingresá para editar tu perfil" action={<Button onClick={() => setLoginOpen(true)}>Ingresar</Button>} /></div>;
@@ -60,6 +61,19 @@ export default function Settings() {
               </HelpTip>
             </label>
           </div>
+          {f.is_artist && (
+            <div className="form-check form-switch app-switch">
+              <input className="form-check-input" type="checkbox" role="switch" id="wm" checked={f.watermark_enabled} onChange={set("watermark_enabled")} />
+              <label className="form-check-label body-strong" htmlFor="wm">Marca de agua en mis obras
+                <HelpTip title="¿Qué protege esto?">
+                  <p>Tus obras <strong>siempre</strong> están protegidas, tengas esto activado o no: nunca se muestra
+                  el enlace original, y el sitio bloquea el clic derecho, arrastrar y seleccionar la imagen.</p>
+                  <p className="m-0">Esto solo agrega, de forma sutil sobre la imagen, tu usuario y «DBP Ilustra» como
+                  firma extra. Si preferís que tu obra se vea limpia, dejalo desactivado.</p>
+                </HelpTip>
+              </label>
+            </div>
+          )}
           <div className="row g-3">
             <div className="col-md-6"><label className="form-label body-strong" htmlFor="n">Nombre visible</label>
               <input id="n" className="form-control" required minLength={2} maxLength={80} value={f.display_name} onChange={set("display_name")} /></div>
