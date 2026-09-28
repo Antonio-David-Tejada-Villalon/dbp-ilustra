@@ -42,7 +42,8 @@
     color: #5b2bd9; font-weight: bold; font-size: 13px; line-height: 20px; cursor: pointer; padding: 0;
   }
   .ilustra-section-help-panel {
-    position: absolute; z-index: 100; top: 28px; left: 0; width: min(380px, 80vw);
+    position: absolute; z-index: 100; top: calc(100% + 8px); right: 0; left: auto;
+    width: min(380px, calc(100vw - 24px)); max-width: calc(100vw - 24px);
     background: #fff; color: #333; border: 1px solid #ccc; border-radius: 8px;
     box-shadow: 0 6px 24px rgba(0,0,0,.25); padding: 12px 14px; font-size: 13px; line-height: 1.5;
   }
