@@ -58,7 +58,8 @@ export default function Layout() {
       {!reader && (
         <footer className="app-footer">
           <Logo variant="horizontal" height={28} />
-          <p>Una plataforma de la Dirección de Bibliotecas Populares y Actividades Literarias de San Juan.</p>
+          <p>Una plataforma de la Dirección de Bibliotecas Populares y Actividades Literarias de San Juan.
+            {" "}<a href="https://www.instagram.com/dbpsanjuan" target="_blank" rel="noopener noreferrer">Seguila en Instagram</a>.</p>
           <p className="small">Las obras pertenecen a sus autores. Prohibida su reproducción sin permiso.</p>
           <p className="small"><Link to="/guia-artistas">Guía para artistas</Link> · <Link to="/privacidad">Privacidad</Link> · <Link to="/terminos">Términos</Link></p>
         </footer>
