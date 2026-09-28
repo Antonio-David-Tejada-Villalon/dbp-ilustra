@@ -25,11 +25,15 @@ export default function Guide() {
       <p>Es el link que termina en el archivo de imagen en sí (<code>.jpg</code>, <code>.png</code>,
       <code>.webp</code> o <code>.gif</code>), no una página web que la muestra adentro. Por ejemplo:</p>
       <ul>
-        <li className="body-strong">Sirve: <code>https://i.ibb.co/abc123/mi-obra.jpg</code></li>
-        <li>No sirve: <code>https://ibb.co/abc123</code> (esa es la página, no la imagen)</li>
+        <li className="body-strong">Sirve: <code>https://i.imgur.com/abc123.jpg</code></li>
+        <li>No sirve: <code>https://imgur.com/abc123</code> (esa es la página, no la imagen)</li>
       </ul>
-      <p>Para conseguirlo: subí tu imagen a un servicio público (imgur, ibb.co, tu propia web, etc.),
-      abrí la imagen sola a pantalla completa, y hacé clic derecho → «Copiar dirección de imagen».</p>
+      <p>Para conseguirlo: subí tu imagen a un servicio público, abrí la imagen sola a pantalla completa,
+      y hacé clic derecho → «Copiar dirección de imagen».</p>
+      <p><strong>¿Qué servicio usar?</strong> Recomendamos <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer">imgur.com</a> — no
+      pide cuenta y suele subir más rápido que otros. <a href="https://postimages.org" target="_blank" rel="noopener noreferrer">postimages.org</a> es otra
+      buena opción, también sin cuenta. Si uno anda lento en tu conexión un día, probá con el otro: la
+      velocidad de subida varía según el servicio y el momento, no depende de DBP Ilustra.</p>
       <p>Formatos aceptados: JPG, PNG, WEBP o GIF (si es animado, se muestra el primer cuadro), mínimo
       200 píxeles de lado, máximo 15 MB.</p>
 
