@@ -1,3 +1,4 @@
+import re
 import socket
 
 import pytest
@@ -60,7 +61,8 @@ def test_publicar_requiere_perfil_de_artista(login, fake_fetch):
     assert r.status_code == 201, r.text
     data = r.json()
     assert data["tags"] == ["tinta"] and data["ratio"] == 0.75
-    assert "image_url" not in data and data["image"] == f"/api/img/a/{data['id']}?wm=0"
+    assert "image_url" not in data
+    assert re.fullmatch(rf"/api/img/a/{data['id']}\?v=[0-9a-f]{{10}}", data["image"])
 
 
 def test_suspendido_no_puede_escribir(login):
