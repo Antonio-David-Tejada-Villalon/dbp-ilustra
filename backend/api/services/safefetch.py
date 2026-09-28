@@ -70,34 +70,39 @@ def validate_url_syntax(url: str) -> str:
 def fetch_image(url: str, max_bytes: int | None = None) -> FetchedImage:
     max_bytes = max_bytes or settings.MAX_IMAGE_BYTES
     current = validate_url_syntax(url)
-    with httpx.Client(timeout=httpx.Timeout(10.0, connect=5.0), follow_redirects=False,
-                      headers={"User-Agent": USER_AGENT, "Accept": "image/*"}) as client:
-        for _ in range(4):
-            with client.stream("GET", current) as resp:
-                if resp.status_code in (301, 302, 303, 307, 308):
-                    location = resp.headers.get("location")
-                    if not location:
-                        raise ImageURLError("El enlace redirige a un destino inválido.")
-                    current = urljoin(current, location)
-                    _check_host(current)
-                    continue
-                if resp.status_code != 200:
-                    raise ImageURLError(f"El sitio respondió con error {resp.status_code}. ¿El enlace es público?")
-                ctype = resp.headers.get("content-type", "").split(";")[0].strip().lower()
-                if not ctype.startswith("image/"):
-                    raise ImageURLError("El enlace no es una imagen directa. Usá el enlace que termina en la imagen (clic derecho → copiar dirección de imagen).")
-                declared = resp.headers.get("content-length")
-                if declared and declared.isdigit() and int(declared) > max_bytes:
-                    raise ImageURLError("La imagen supera el tamaño máximo permitido.")
-                buf = io.BytesIO()
-                for chunk in resp.iter_bytes():
-                    buf.write(chunk)
-                    if buf.tell() > max_bytes:
+    try:
+        with httpx.Client(timeout=httpx.Timeout(10.0, connect=5.0), follow_redirects=False,
+                          headers={"User-Agent": USER_AGENT, "Accept": "image/*"}) as client:
+            for _ in range(4):
+                with client.stream("GET", current) as resp:
+                    if resp.status_code in (301, 302, 303, 307, 308):
+                        location = resp.headers.get("location")
+                        if not location:
+                            raise ImageURLError("El enlace redirige a un destino inválido.")
+                        current = urljoin(current, location)
+                        _check_host(current)
+                        continue
+                    if resp.status_code != 200:
+                        raise ImageURLError(f"El sitio respondió con error {resp.status_code}. ¿El enlace es público?")
+                    ctype = resp.headers.get("content-type", "").split(";")[0].strip().lower()
+                    if not ctype.startswith("image/"):
+                        raise ImageURLError("El enlace no es una imagen directa. Usá el enlace que termina en la imagen (clic derecho → copiar dirección de imagen).")
+                    declared = resp.headers.get("content-length")
+                    if declared and declared.isdigit() and int(declared) > max_bytes:
                         raise ImageURLError("La imagen supera el tamaño máximo permitido.")
-                data = buf.getvalue()
-                break
-        else:
-            raise ImageURLError("El enlace tiene demasiadas redirecciones.")
+                    buf = io.BytesIO()
+                    for chunk in resp.iter_bytes():
+                        buf.write(chunk)
+                        if buf.tell() > max_bytes:
+                            raise ImageURLError("La imagen supera el tamaño máximo permitido.")
+                    data = buf.getvalue()
+                    break
+            else:
+                raise ImageURLError("El enlace tiene demasiadas redirecciones.")
+    except httpx.TimeoutException:
+        raise ImageURLError("El sitio de la imagen tardó demasiado en responder. Probá de nuevo en un momento.")
+    except httpx.HTTPError:
+        raise ImageURLError("No pudimos conectar con el sitio de la imagen. Revisá el enlace o probá de nuevo.")
     try:
         with Image.open(io.BytesIO(data)) as im:
             im.verify()
