@@ -101,7 +101,7 @@ fieldset legend { font-size: 15px; }
 }
 .help-tip-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .help-tip-panel {
-  position: absolute; z-index: 50; top: 26px; left: 0; width: min(320px, 80vw);
+  position: absolute; z-index: 50; top: 26px; left: 0; width: min(320px, calc(100vw - 24px));
   background: var(--surface-raised); color: var(--ink); border: 1px solid var(--line);
   border-radius: var(--radius-lg); box-shadow: var(--shadow-raised); padding: var(--space-4);
   display: grid; gap: var(--space-2); font-size: 13px; line-height: 1.5;
