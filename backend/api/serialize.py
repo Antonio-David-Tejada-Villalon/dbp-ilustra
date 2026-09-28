@@ -1,4 +1,6 @@
 """Convierte modelos a JSON para el frontend. Nunca expone el enlace original de las obras."""
+import re
+
 from django.utils import timezone
 from django.utils.timesince import timesince
 
@@ -15,7 +17,14 @@ def avatar(profile):
         return None
     if profile.avatar_url.startswith("demo:"):
         return f"/api/img/u/{profile.handle}/avatar"
-    return profile.avatar_url or None
+    url = profile.avatar_url
+    if not url:
+        return None
+    if "googleusercontent.com" in url:
+        # Google entrega por defecto una foto chica (p. ej. =s96-c); pedimos una más grande
+        # para que no se vea borrosa en pantallas de alta densidad (celulares).
+        url = re.sub(r"=s\d+-c$", "=s256-c", url) if re.search(r"=s\d+-c$", url) else url + "=s256-c"
+    return url
 
 
 def person(user):
