@@ -23,7 +23,7 @@ function ArtworkForm() {
     e.preventDefault();
     setBusy(true);
     try {
-      const a = await api.post("/artworks", { ...f, tags: f.tags.split(/[,\s]+/).filter(Boolean) });
+      const a = await api.post("/artworks", { ...f, tags: f.tags.split(",").map((t) => t.trim()).filter(Boolean) });
       toast("¡Obra publicada!", "ok");
       nav(`/obra/${a.id}`);
     } catch (err) {

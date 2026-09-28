@@ -7,6 +7,22 @@ export class ApiError extends Error {
   }
 }
 
+/** Traduce nombres de campo de los modelos de la API a lo que ve el usuario. */
+const FIELD_LABELS = {
+  title: "Título", description: "Descripción", category: "Categoría", image_url: "Enlace de la imagen",
+  cover_url: "Portada", tags: "Etiquetas", url: "Enlace", handle: "Usuario", display_name: "Nombre visible",
+  bio: "Biografía", location: "Ubicación", contact: "Contacto", text: "Texto", message: "Mensaje", pages: "Páginas",
+};
+
+/** Arma un mensaje legible a partir de un error de validación de FastAPI/Pydantic (lista de {loc, msg}). */
+function validationMessage(detail) {
+  const first = detail[0];
+  if (!first || typeof first !== "object") return null;
+  const field = Array.isArray(first.loc) ? first.loc[first.loc.length - 1] : null;
+  const label = (field && FIELD_LABELS[field]) || field;
+  return label ? `${label}: ${first.msg || "dato inválido"}` : first.msg || null;
+}
+
 async function request(method, path, body) {
   const opts = { method, credentials: "same-origin", headers: {} };
   if (method !== "GET") opts.headers["X-Requested-With"] = "ilustra";
@@ -23,7 +39,9 @@ async function request(method, path, body) {
   const data = await res.json().catch(() => null);
   if (!res.ok) {
     const d = data && data.detail;
-    const msg = typeof d === "string" ? d : (d && d.message) || "Ocurrió un error. Probá de nuevo.";
+    const msg = typeof d === "string" ? d
+      : Array.isArray(d) ? (validationMessage(d) || "Revisá los datos ingresados.")
+      : (d && d.message) || "Ocurrió un error. Probá de nuevo.";
     throw new ApiError(msg, res.status, d);
   }
   return data;
