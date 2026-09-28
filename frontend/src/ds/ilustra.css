@@ -111,6 +111,7 @@
 /* Artist card */
 .il-artist { background: var(--surface-raised); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); overflow: hidden; }
 .il-artist-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.il-artist-thumb-empty { padding-top: 100%; background: var(--surface-sunken); }
 .il-artist-body { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 0 var(--space-4) var(--space-4); margin-top: -28px; position: relative; }
 .il-artist-name { margin-top: var(--space-2); font: 700 16px/22px var(--font-sans); color: var(--ink); }
 .il-artist-handle { font: 500 13px/18px var(--font-sans); color: var(--ink-muted); }

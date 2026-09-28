@@ -166,9 +166,12 @@ import React from "react";
 
   /* ---------- ArtistCard ---------- */
   function ArtistCard(props) {
+    var works = props.works || [];
     return h("article", { className: "il-artist" },
-      h("div", { className: "il-artist-thumbs" }, (props.works || []).slice(0, 3).map(function (src, i) {
-        return h(ProtectedImage, { key: i, src: src, ratio: 1, rounded: false });
+      h("div", { className: "il-artist-thumbs" }, [0, 1, 2].map(function (i) {
+        return works[i]
+          ? h(ProtectedImage, { key: i, src: works[i], ratio: 1, rounded: false })
+          : h("div", { key: i, className: "il-artist-thumb-empty" });
       })),
       h("div", { className: "il-artist-body" },
         h(Avatar, { src: props.avatar, name: props.name, size: 56, ring: true }),
