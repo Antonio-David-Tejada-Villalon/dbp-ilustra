@@ -116,6 +116,7 @@ class ArtworkPatch(BaseModel):
     description: str | None = Field(None, max_length=2000)
     category: str | None = None
     tags: list[str] | None = Field(None, max_length=10)
+    image_url: str | None = Field(None, max_length=1000)
 
 
 def own_artwork(artwork_id, user):
@@ -133,6 +134,12 @@ def update_artwork(artwork_id: int, body: ArtworkPatch, user=Depends(writer)):
         raise HTTPException(422, "Categoría inválida.")
     if "tags" in data:
         data["tags"] = clean_tags(data["tags"] or [])
+    if data.get("image_url"):
+        try:
+            img = fetch_image(data["image_url"])
+        except ImageURLError as e:
+            raise HTTPException(422, str(e))
+        data["width"], data["height"] = img.width, img.height
     for k, v in data.items():
         if v is not None:
             setattr(a, k, v.strip() if isinstance(v, str) else v)

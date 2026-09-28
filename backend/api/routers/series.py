@@ -46,6 +46,8 @@ def get_series(series_id: int, user=Depends(current_user)):
     d = serialize.series(s, chapters)
     d["own"] = bool(user and user.pk == s.author_id)
     d["following"] = bool(user and Follow.objects.filter(follower=user, following=s.author).exists())
+    if d["own"]:
+        d["coverUrl"] = s.cover_url  # solo el autor ve su enlace original
     return d
 
 
@@ -68,6 +70,40 @@ def create_series(body: SeriesIn, user=Depends(artist)):
     s = Series.objects.create(author=user, title=body.title.strip(), description=body.description.strip(), category=body.category,
                               cover_url=body.cover_url.strip(), cover_width=img.width, cover_height=img.height)
     return serialize.series(s, [])
+
+
+class SeriesPatch(BaseModel):
+    title: str | None = Field(None, min_length=1, max_length=120)
+    description: str | None = Field(None, max_length=2000)
+    category: str | None = None
+    cover_url: str | None = Field(None, max_length=1000)
+
+
+def own_series(series_id, user):
+    s = Series.objects.filter(pk=series_id, author=user).first()
+    if not s:
+        raise HTTPException(404, "No encontramos esa serie entre las tuyas.")
+    return s
+
+
+@router.patch("/series/{series_id}")
+def update_series(series_id: int, body: SeriesPatch, user=Depends(writer)):
+    s = own_series(series_id, user)
+    data = body.model_dump(exclude_unset=True)
+    if "category" in data and data["category"] not in SCATS:
+        raise HTTPException(422, "Las series pueden ser Cómic, Manga o Historieta.")
+    if data.get("cover_url"):
+        try:
+            img = fetch_image(data["cover_url"])
+        except ImageURLError as e:
+            raise HTTPException(422, f"Portada: {e}")
+        data["cover_width"], data["cover_height"] = img.width, img.height
+        data["cover_url"] = data["cover_url"].strip()
+    for k, v in data.items():
+        if v is not None:
+            setattr(s, k, v.strip() if isinstance(v, str) and k != "cover_url" else v)
+    s.save()
+    return serialize.series(s, s.chapters.all())
 
 
 class ChapterIn(BaseModel):
@@ -127,13 +163,15 @@ def get_chapter(series_id: int, number: int, user=Depends(current_user)):
     s, ch, qs = _chapter(series_id, number, user)
     prev = qs.filter(number__lt=number).order_by("-number").values_list("number", flat=True).first()
     nxt = qs.filter(number__gt=number).order_by("number").values_list("number", flat=True).first()
+    own = bool(user and user.pk == s.author_id)
     return {
         "series": serialize.series(s), "number": ch.number, "title": ch.title, "id": ch.pk,
-        "pages": [{"id": p.pk, "image": f"/api/img/p/{p.pk}", "ratio": p.ratio} for p in ch.pages.all()],
+        "pages": [{"id": p.pk, "image": f"/api/img/p/{p.pk}", "ratio": p.ratio,
+                   **({"url": p.image_url} if own else {})} for p in ch.pages.all()],
         "prev": prev, "next": nxt, "likes": ch.like_count, "comments": ch.comment_count,
         "liked": bool(user and Like.objects.filter(user=user, chapter=ch).exists()),
         "following": bool(user and Follow.objects.filter(follower=user, following=s.author).exists()),
-        "own": bool(user and user.pk == s.author_id),
+        "own": own,
     }
 
 
@@ -152,6 +190,40 @@ def like_chapter(series_id: int, number: int, user=Depends(writer)):
         notify(s.author_id, user.pk, "like", f"le gustó el capítulo {ch.number} de «{s.title}»", chapter=ch)
     ch.refresh_from_db(fields=["like_count"])
     return {"liked": not deleted, "likes": ch.like_count}
+
+
+class ChapterPatch(BaseModel):
+    title: str | None = Field(None, max_length=120)
+    pages: list[str] | None = Field(None, min_length=1, max_length=MAX_PAGES)
+
+
+@router.patch("/series/{series_id}/chapters/{number}")
+def update_chapter(series_id: int, number: int, body: ChapterPatch, user=Depends(writer)):
+    s = Series.objects.filter(pk=series_id, author=user).first()
+    if not s:
+        raise HTTPException(404, "No encontramos esa serie entre las tuyas.")
+    ch = s.chapters.filter(number=number).first()
+    if not ch:
+        raise HTTPException(404, "No encontramos ese capítulo entre los tuyos.")
+    data = body.model_dump(exclude_unset=True)
+    if "pages" in data:
+        urls = [u.strip() for u in (data["pages"] or []) if u.strip()]
+        if not urls:
+            raise HTTPException(422, "Agregá al menos una página.")
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            results = list(pool.map(_check_page, urls))
+        errors = [{"page": i + 1, "error": err} for i, (_, _, _, err) in enumerate(results) if err]
+        if errors:
+            raise HTTPException(422, {"message": "Algunas páginas no se pudieron validar.", "pages": errors})
+        with transaction.atomic():
+            ch.pages.all().delete()
+            ChapterPage.objects.bulk_create([ChapterPage(chapter=ch, order=i, image_url=u, width=w, height=h)
+                                             for i, (u, w, h, _) in enumerate(results)])
+    if "title" in data:
+        ch.title = (data["title"] or "").strip()
+    ch.save()
+    s.save(update_fields=["updated"])
+    return {"series": s.pk, "number": ch.number}
 
 
 @router.delete("/series/{series_id}/chapters/{number}")
