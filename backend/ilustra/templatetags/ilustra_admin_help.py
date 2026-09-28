@@ -18,14 +18,19 @@ SECTION_HELP = {
     "ilustra.series": (
         "Series",
         "Cómics, manga e historietas con capítulos. Mismas acciones que Obras: «Ocultar (moderación)» y "
-        "«Volver a publicar / mostrar». Cada serie tiene sus capítulos editables ahí mismo, en una lista "
-        "dentro de la misma pantalla (scrolleá hacia abajo al abrir una serie).<br><br>"
+        "«Volver a publicar / mostrar». Al abrir una serie hay dos listas editables ahí mismo, sin salir de "
+        "la pantalla: sus <strong>Capítulos</strong> y su <strong>casting de Personajes</strong> (nombre, "
+        "imagen y voz sugerida para la narración por voz del lector).<br><br>"
         "<em>Ejemplo:</em> una serie completa infringe derechos de autor → la buscás, la tildás y la ocultás; "
-        "eso también saca de circulación sus capítulos."
+        "eso también saca de circulación sus capítulos. Si un personaje tiene una imagen inapropiada, se "
+        "edita o se borra desde esa misma lista, dentro de la serie."
     ),
     "ilustra.chapter": (
         "Capítulos",
         "Páginas de una serie, agrupadas por capítulo. Mismas acciones de ocultar/publicar que en Obras.<br><br>"
+        "Cada página puede tener <strong>viñetas de texto</strong> (globos de diálogo) que el artista agrega "
+        "desde el lector; ese texto no se edita desde acá, pero si hace falta sacarlo de circulación por su "
+        "contenido, ocultar el capítulo entero también oculta sus viñetas.<br><br>"
         "<em>Ejemplo:</em> un solo capítulo de una serie tiene un problema (el resto está bien) → buscalo por "
         "el título de la serie, tildá solo ese capítulo, y aplicá «Ocultar (moderación)» sin tocar los demás."
     ),

@@ -6,6 +6,7 @@ import { Button, ChapterNav, ProtectedImage, ReaderBar } from "../ds/ilustra";
 import { useApi, useTitle } from "../hooks";
 import { useToast } from "../toast";
 import Comments from "../components/Comments";
+import HelpTip from "../components/HelpTip";
 import { ErrorState, Loading } from "../components/States";
 import { hasTTS, pickVoice, speakOnce } from "../voice";
 
@@ -50,6 +51,22 @@ function OverlayEditor({ page, characters, onSave, onClose }) {
   };
   return (
     <div className="app-overlay-editor">
+      <div className="d-flex align-items-center gap-2">
+        <span className="body-strong">Viñetas de esta página</span>
+        <HelpTip title="¿Cómo cargo una viñeta?">
+          <p><strong>Texto:</strong> lo que dice el personaje o el cartel de la escena.</p>
+          <p><strong>X / Y:</strong> dónde arranca el globo, en % de la imagen (0 = borde izquierdo/superior,
+          100 = borde derecho/inferior). <strong>Ancho %:</strong> qué tan ancho se ve el globo.</p>
+          <p className="m-0">Movés los números y el globo se reacomoda solo en la imagen de arriba — no
+          hace falta arrastrar nada, con probar un par de valores lo ubicás.</p>
+          <p><strong>Personaje:</strong> opcional. Si elegís uno, se usa SU voz al narrar; si dejás «Sin
+          personaje», se usa el selector de Voz de al lado.</p>
+          <p><strong>Enlace de sonido:</strong> opcional, un enlace directo a un audio (por ejemplo un grito
+          o un efecto) que se reproduce junto con esa viñeta al narrar o al tocarla.</p>
+          <p className="m-0"><em>Ejemplo:</em> texto «¡Cuidado!», X 10, Y 70, Ancho 35, personaje «Lara» →
+          aparece un globo abajo a la izquierda de la página, y al narrar se lee con la voz de Lara.</p>
+        </HelpTip>
+      </div>
       {list.length === 0 && <p className="caption text-muted-ink">Todavía no hay viñetas en esta página.</p>}
       {list.map((o, i) => (
         <div key={o.id} className="app-overlay-row">
@@ -222,11 +239,20 @@ export default function Reader() {
         <ReaderBar series={c.series.title} category={c.series.category} chapter={c.number} title={c.title} author={c.series.artist.name}
           progress={progress} following={c.following} onFollow={c.own ? undefined : follow} onBack={() => nav(`/serie/${id}`)} />
       </div>
-      <div className="app-wrap d-flex gap-2 py-2 flex-wrap">
+      <div className="app-wrap d-flex align-items-center gap-2 py-2 flex-wrap">
         {c.own && <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>Editar capítulo</Button>}
         {c.own && <Button size="sm" variant="secondary" active={overlayEdit} onClick={() => { setOverlayEdit((v) => !v); setEditingPage(null); }}>
           {overlayEdit ? "Listo con las viñetas" : "Editar viñetas"}
         </Button>}
+        {c.own && (
+          <HelpTip title="Viñetas de texto y narración">
+            <p>«Editar viñetas» te deja agregar globos de diálogo sobre las páginas de este capítulo,
+            con texto, posición, un personaje opcional y un sonido opcional.</p>
+            <p className="m-0">En cuanto haya al menos una viñeta guardada, aparece acá el botón «Narrar
+            capítulo»: lee todas en voz alta, en orden, con la voz de cada personaje. Cualquier lector
+            también puede tocar un globo suelto para escuchar solo esa línea.</p>
+          </HelpTip>
+        )}
         {hasTTS && hasOverlays && (
           <Button size="sm" variant="secondary" icon={narrating ? "volume-x" : "volume-2"} onClick={narrating ? stopNarration : startNarration}>
             {narrating ? "Detener narración" : "Narrar capítulo"}

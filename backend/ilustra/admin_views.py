@@ -33,9 +33,12 @@ Autenticación y Autorización
 DBP Ilustra
 - Obras: listado de ilustraciones/páginas publicadas. Acciones: «Ocultar (moderación)» y «Volver a
   publicar / mostrar». Se puede filtrar por estado, categoría y fecha, y buscar por título o autor.
-- Series: cómics/manga/historietas con capítulos. Mismas acciones que Obras. Cada serie tiene sus
-  capítulos como sub-lista editable ahí mismo (inline).
-- Capítulos: páginas de una serie. Mismas acciones de ocultar/publicar.
+- Series: cómics/manga/historietas con capítulos. Mismas acciones que Obras. Cada serie tiene, editables
+  ahí mismo (inline): sus capítulos, y su casting de Personajes (nombre, imagen —puede ser GIF animado—
+  y una voz sugerida grave/aguda/neutra que se usa cuando alguien narra un capítulo con esa serie).
+- Capítulos: páginas de una serie. Mismas acciones de ocultar/publicar. Cada página puede tener viñetas
+  de texto (globos de diálogo) cargadas por el artista desde el lector del sitio; no se editan desde el
+  panel, pero ocultar el capítulo también las saca de circulación.
 - Comentarios: moderación de comentarios, con las mismas acciones ocultar/publicar. La columna «En»
   indica si el comentario es de una obra o de un capítulo.
 - Reportes: lo que reportan los usuarios con el botón de bandera. Acciones: «Marcar como resuelto» y

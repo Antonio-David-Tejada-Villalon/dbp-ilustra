@@ -82,7 +82,16 @@ function CharacterForm({ seriesId, character, onSaved, onCancel }) {
         hint={character ? "Dejala igual si no querés cambiar la imagen." : undefined} />
       <div><label className="form-label body-strong" htmlFor="ch-d">Descripción</label>
         <input id="ch-d" className="form-control" maxLength={300} value={f.description} onChange={set("description")} placeholder="Quién es, cómo habla…" /></div>
-      <div><label className="form-label body-strong" htmlFor="ch-v">Voz para narrar sus diálogos</label>
+      <div><label className="form-label body-strong" htmlFor="ch-v">Voz para narrar sus diálogos
+          <HelpTip title="¿Qué hace la voz del personaje?">
+            <p>Es una pista de estilo, no una voz exacta: cuando alguien narra un capítulo y una viñeta
+            tiene este personaje asignado, el sitio busca entre las voces en español instaladas en el
+            dispositivo de esa persona una que combine con «Grave» o «Aguda». «Neutra» o «Automática»
+            usan la primera voz en español disponible.</p>
+            <p className="m-0">Las voces disponibles varían según el celular o la computadora de quien
+            lee — no todos van a escuchar exactamente la misma voz, pero sí el mismo estilo aproximado.</p>
+          </HelpTip>
+        </label>
         <select id="ch-v" className="form-select" value={f.voice} onChange={set("voice")}>{VOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
       <div className="d-flex gap-2 justify-content-end">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={busy}>Cancelar</Button>
