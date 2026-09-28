@@ -18,7 +18,7 @@ function EditForm({ a, onSaved, onCancel }) {
   const [f, setF] = useState({ title: a.title, description: a.description, category: a.category, tags: (a.tags || []).join(", "), image_url: a.imageUrl });
   const [valid, setValid] = useState(true);
   const [busy, setBusy] = useState(false);
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const set = (k) => (e) => setF({ ...f, [k]: e && e.target ? e.target.value : e });
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
