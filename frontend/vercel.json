@@ -5,6 +5,10 @@
     { "source": "/admin", "destination": "https://dbp-ilustra.onrender.com/admin" },
     { "source": "/admin/(.*)", "destination": "https://dbp-ilustra.onrender.com/admin/$1" },
     { "source": "/static/(.*)", "destination": "https://dbp-ilustra.onrender.com/static/$1" },
+    { "source": "/obra/(.*)", "destination": "https://dbp-ilustra.onrender.com/obra/$1" },
+    { "source": "/serie/(.*)", "destination": "https://dbp-ilustra.onrender.com/serie/$1" },
+    { "source": "/artista/(.*)", "destination": "https://dbp-ilustra.onrender.com/artista/$1" },
+    { "source": "/leer/(.*)", "destination": "https://dbp-ilustra.onrender.com/leer/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -13,10 +13,11 @@ django.setup()
 from django.conf import settings  # noqa: E402
 from django.core.asgi import get_asgi_application  # noqa: E402
 from fastapi import APIRouter, FastAPI, Request  # noqa: E402
-from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from .routers import artworks, assistant, auth, discover, images, series, social  # noqa: E402
+from .services import social_meta  # noqa: E402
 
 django_app = get_asgi_application()
 
@@ -55,6 +56,14 @@ class Fallback:
 
     def __init__(self, dist):
         self.dist = dist
+        self._index_html = None
+
+    def _index_template(self):
+        if self._index_html is None:
+            index = self.dist / "index.html"
+            if index.exists():
+                self._index_html = index.read_text(encoding="utf-8")
+        return self._index_html
 
     async def __call__(self, scope, receive, send):
         path = scope.get("path", "")
@@ -66,9 +75,13 @@ class Fallback:
         if path != "/" and candidate.is_file() and self.dist.resolve() in candidate.parents:
             cache = "public, max-age=31536000, immutable" if path.startswith("/assets/") else "no-cache"
             return await FileResponse(candidate, headers={"Cache-Control": cache})(scope, receive, send)
-        index = self.dist / "index.html"
-        if index.exists():
-            return await FileResponse(index, headers={"Cache-Control": "no-cache"})(scope, receive, send)
+        template = self._index_template()
+        if template is not None:
+            meta = await social_meta.meta_for_path(path)
+            if meta:
+                html = social_meta.inject(template, **meta)
+                return await HTMLResponse(html, headers={"Cache-Control": "public, max-age=300"})(scope, receive, send)
+            return await HTMLResponse(template, headers={"Cache-Control": "no-cache"})(scope, receive, send)
         return await JSONResponse({"detail": "Frontend no compilado. En desarrollo usá http://localhost:5173"}, status_code=404)(scope, receive, send)
 
 

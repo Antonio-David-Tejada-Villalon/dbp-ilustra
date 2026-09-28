@@ -126,4 +126,4 @@ MAX_IMAGE_BYTES = int(env("MAX_IMAGE_BYTES", str(15 * 1024 * 1024)))
 # Hosts de imágenes permitidos (vacío = cualquier host público).
 IMAGE_ALLOWED_HOSTS = env_list("IMAGE_ALLOWED_HOSTS", "")
 FRONTEND_DIST = Path(env("FRONTEND_DIST", str(BASE_DIR.parent / "frontend" / "dist")))
-SITE_URL = env("SITE_URL", "http://localhost:5173")
+SITE_URL = env("SITE_URL", "https://dbp-ilustra.vercel.app")
