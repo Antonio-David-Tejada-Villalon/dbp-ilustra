@@ -5,6 +5,7 @@ import Artwork from "./pages/Artwork";
 import Category from "./pages/Category";
 import Community from "./pages/Community";
 import Discover from "./pages/Discover";
+import Guide from "./pages/Guide";
 import Home from "./pages/Home";
 import { Me, NotFound, Privacy, Terms } from "./pages/Misc";
 import Notifications from "./pages/Notifications";
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="ajustes" element={<Settings />} />
         <Route path="buscar" element={<Search />} />
         <Route path="yo" element={<Me />} />
+        <Route path="guia-artistas" element={<Guide />} />
         <Route path="privacidad" element={<Privacy />} />
         <Route path="terminos" element={<Terms />} />
         <Route path="*" element={<NotFound />} />

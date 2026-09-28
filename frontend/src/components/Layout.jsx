@@ -61,7 +61,7 @@ export default function Layout() {
           <Logo variant="horizontal" height={28} />
           <p>Una plataforma de la Dirección de Bibliotecas Populares y Actividades Literarias de San Juan.</p>
           <p className="small">Las obras pertenecen a sus autores. Prohibida su reproducción sin permiso.</p>
-          <p className="small"><Link to="/privacidad">Privacidad</Link> · <Link to="/terminos">Términos</Link></p>
+          <p className="small"><Link to="/guia-artistas">Guía para artistas</Link> · <Link to="/privacidad">Privacidad</Link> · <Link to="/terminos">Términos</Link></p>
         </footer>
       )}
       {!reader && <div className="app-bottom"><BottomNav linkAs={Link} active={bottomActive} unread={user?.unread}

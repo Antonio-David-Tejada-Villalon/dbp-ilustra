@@ -1,0 +1,7 @@
+{% extends "admin/change_form.html" %}
+{% load ilustra_admin_help %}
+
+{% block object-tools-items %}
+<li>{% section_help opts %}</li>
+{{ block.super }}
+{% endblock %}

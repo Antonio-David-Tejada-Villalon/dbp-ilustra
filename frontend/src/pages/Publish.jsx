@@ -5,6 +5,7 @@ import { useAuth } from "../auth";
 import { Button, Tabs } from "../ds/ilustra";
 import { useApi, useTitle } from "../hooks";
 import { useToast } from "../toast";
+import HelpTip from "../components/HelpTip";
 import ImageUrlField from "../components/ImageUrlField";
 import { Empty, Loading } from "../components/States";
 
@@ -112,7 +113,13 @@ function ChapterForm({ seriesId, mine }) {
         <select id="cs" className="form-select" value={sid} onChange={(e) => setSid(e.target.value)}>{mine.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}</select></div>
       <div><label className="form-label body-strong" htmlFor="ct">Título del capítulo (opcional)</label>
         <input id="ct" className="form-control" maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-      <div><label className="form-label body-strong" htmlFor="cp">Páginas en orden</label>
+      <div><label className="form-label body-strong" htmlFor="cp">Páginas en orden
+          <HelpTip title="¿Cómo cargo las páginas?">
+            <p>Un enlace directo a imagen por línea (igual que en Obra), en el orden en que se leen: primero la página 1, después la 2, etc.</p>
+            <p className="m-0">Ejemplo:</p>
+            <p className="m-0"><code>https://i.ibb.co/.../pagina-01.jpg</code><br /><code>https://i.ibb.co/.../pagina-02.jpg</code></p>
+          </HelpTip>
+        </label>
         <textarea id="cp" className="form-control font-monospace" rows={8} value={pages} onChange={(e) => setPages(e.target.value)}
           placeholder={"https://…/pagina-01.jpg\nhttps://…/pagina-02.jpg"} />
         <small className="text-muted-ink">Un enlace por línea, en orden de lectura. {urls.length} página(s). Máximo 80.</small></div>
@@ -137,7 +144,11 @@ export default function Publish() {
   );
   return (
     <div className="app-wrap app-narrow">
-      <header className="app-page-head"><div className="il-overline">Publicar</div><h1 className="display-lg m-0">Compartí tu obra</h1></header>
+      <header className="app-page-head">
+        <div className="il-overline">Publicar</div>
+        <h1 className="display-lg m-0">Compartí tu obra</h1>
+        <p className="m-0"><Link to="/guia-artistas">¿Primera vez? Mirá la guía para artistas</Link></p>
+      </header>
       <Tabs items={[{ id: "artwork", label: "Obra" }, { id: "series", label: "Nueva serie" }, { id: "chapter", label: "Capítulo" }]} active={tab} onChange={setTab} />
       {tab === "artwork" && <ArtworkForm />}
       {tab === "series" && <SeriesForm onCreated={(id) => { setNewSeries(String(id)); mine.reload(); setTab("chapter"); }} />}

@@ -35,6 +35,18 @@
   #ilustra-help-input:focus { outline: none; }
   #ilustra-help-send { border: none; background: transparent; color: #5b2bd9; font-weight: bold; padding: 0 14px; cursor: pointer; }
   #ilustra-help-hint { padding: 6px 12px; font-size: 11px; color: #8b86a0; }
+
+  .ilustra-section-help { position: relative; display: inline-block; margin-left: 8px; vertical-align: middle; }
+  .ilustra-section-help-btn {
+    width: 22px; height: 22px; border-radius: 50%; border: 1px solid #5b2bd9; background: #ece6fc;
+    color: #5b2bd9; font-weight: bold; font-size: 13px; line-height: 20px; cursor: pointer; padding: 0;
+  }
+  .ilustra-section-help-panel {
+    position: absolute; z-index: 100; top: 28px; left: 0; width: min(380px, 80vw);
+    background: #fff; color: #333; border: 1px solid #ccc; border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.25); padding: 12px 14px; font-size: 13px; line-height: 1.5;
+  }
+  .ilustra-section-help-panel code { background: #f2f2f2; padding: 1px 4px; border-radius: 4px; }
 </style>
 {% endif %}
 {% endblock %}

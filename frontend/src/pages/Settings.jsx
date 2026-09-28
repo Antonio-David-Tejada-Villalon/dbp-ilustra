@@ -6,6 +6,7 @@ import { Button, CategoryTag, ProfileHeader } from "../ds/ilustra";
 import { useTitle } from "../hooks";
 import { THEMES, applyTheme, getTheme } from "../theme";
 import { useToast } from "../toast";
+import HelpTip from "../components/HelpTip";
 import ImageUrlField from "../components/ImageUrlField";
 import { Empty, Loading } from "../components/States";
 
@@ -52,7 +53,12 @@ export default function Settings() {
         <form className="app-form" onSubmit={save}>
           <div className="form-check form-switch app-switch">
             <input className="form-check-input" type="checkbox" role="switch" id="art" checked={f.is_artist} onChange={set("is_artist")} />
-            <label className="form-check-label body-strong" htmlFor="art">Soy artista: quiero publicar obras y series</label>
+            <label className="form-check-label body-strong" htmlFor="art">Soy artista: quiero publicar obras y series
+              <HelpTip title="¿Qué cambia si activo esto?">
+                <p>Sin esto activado podés mirar, leer, comentar, dar me gusta y seguir artistas, pero no vas a ver la opción Publicar.</p>
+                <p className="m-0">Al activarlo aparece «Publicar» en el menú, y podés cargar obras sueltas o series (cómic/manga/historieta) con capítulos. No hace falta ser artista profesional, solo tener algo para compartir.</p>
+              </HelpTip>
+            </label>
           </div>
           <div className="row g-3">
             <div className="col-md-6"><label className="form-label body-strong" htmlFor="n">Nombre visible</label>

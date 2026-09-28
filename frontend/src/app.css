@@ -92,6 +92,21 @@ fieldset legend { font-size: 15px; }
 .app-swatch.is-on { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
 .app-swatch:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
 .app-swatch-dot { width: 24px; height: 24px; border-radius: 50%; }
+
+.help-tip { position: relative; display: inline-flex; vertical-align: middle; margin-left: 6px; }
+.help-tip-btn {
+  width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--violet); background: var(--violet-soft);
+  color: var(--violet); font: 700 12px/1 var(--font-sans); cursor: pointer; padding: 0; line-height: 18px;
+}
+.help-tip-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.help-tip-panel {
+  position: absolute; z-index: 50; top: 26px; left: 0; width: min(320px, 80vw);
+  background: var(--surface-raised); color: var(--ink); border: 1px solid var(--line);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-raised); padding: var(--space-4);
+  display: grid; gap: var(--space-2); font-size: 13px; line-height: 1.5;
+}
+.help-tip-body ul, .help-tip-body ol { margin: 0; padding-left: 1.1em; }
+.help-tip-body code { background: var(--surface-sunken); padding: 1px 4px; border-radius: 4px; }
 .app-swatch-violet { background: var(--violet); } .app-swatch-yellow { background: var(--yellow); } .app-swatch-sky { background: var(--sky); } .app-swatch-coral { background: var(--coral); }
 .app-settings { display: grid; gap: var(--space-6); }
 .app-settings-preview .il-profile-main { grid-template-columns: 1fr; padding: 0 var(--space-4) var(--space-4); }
