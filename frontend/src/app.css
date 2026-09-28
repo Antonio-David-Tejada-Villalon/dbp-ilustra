@@ -15,6 +15,7 @@
   --bs-secondary-bg: var(--surface-sunken);
 }
 [data-theme="nocturno"] { color-scheme: dark; --bs-link-color-rgb: 165, 139, 255; }
+html, body { max-width: 100%; overflow-x: hidden; }
 body { background: var(--surface); color: var(--ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 a { color: var(--violet); }
 .form-control, .form-select { background-color: var(--surface-raised); color: var(--ink); border-color: var(--line-strong); }

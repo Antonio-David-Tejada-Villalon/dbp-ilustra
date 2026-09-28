@@ -4,7 +4,6 @@ import { img } from "../api";
 import { useAuth } from "../auth";
 import { BottomNav, Logo, NavBar } from "../ds/ilustra";
 import AssistantWidget from "./AssistantWidget";
-import GoogleButton from "./GoogleButton";
 import LoginDialog from "./LoginDialog";
 
 const ACTIVE = [
@@ -31,7 +30,7 @@ function UserMenu({ user, onClose }) {
 }
 
 export default function Layout() {
-  const { user } = useAuth();
+  const { user, setLoginOpen } = useAuth();
   const nav = useNavigate();
   const { pathname } = useLocation();
   const [menu, setMenu] = useState(false);
@@ -47,7 +46,7 @@ export default function Layout() {
       {!reader && (
         <div className="app-top">
           <NavBar linkAs={Link} active={active} user={u} unread={user?.unread}
-            signIn={user === null ? <GoogleButton size="medium" /> : <span />}
+            onSignIn={() => setLoginOpen(true)}
             onSearch={(q) => nav(q ? `/buscar?q=${encodeURIComponent(q)}` : "/buscar")}
             onNotifications={() => nav("/notificaciones")} onUser={() => setMenu((m) => !m)} />
           {menu && u && <UserMenu user={u} onClose={() => setMenu(false)} />}
