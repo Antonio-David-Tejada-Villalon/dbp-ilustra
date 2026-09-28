@@ -62,6 +62,11 @@ def series(s, chapters=None):
     return d
 
 
+def character(c, author):
+    return {"id": c.pk, "name": c.name, "description": c.description, "voice": c.voice,
+            "image": f"/api/img/c/{c.pk}?v={img_version(c.image_url, author)}", "ratio": c.ratio}
+
+
 def comment(c, liked_ids=frozenset(), content_author_id=None):
     return {"id": c.pk, "author": person(c.author), "text": c.text, "time": ago(c.created), "likes": c.like_count,
             "liked": c.pk in liked_ids, "isArtist": c.author_id == content_author_id, "parent": c.parent_id, "replies": []}

@@ -3,7 +3,7 @@ from django.db.models import Q
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 
-from ilustra.models import Artwork, ChapterPage, Profile, Project, Series
+from ilustra.models import Artwork, ChapterPage, Character, Profile, Project, Series
 
 from ..deps import current_user
 from ..services.imaging import render
@@ -57,6 +57,17 @@ def series_cover(series_id: int, w: int = Query(800, ge=100, le=2000), user=Depe
     if not s:
         raise HTTPException(404)
     return _serve(s.cover_url, w, _mark(s.author) if w >= 800 else None)
+
+
+@router.get("/img/c/{character_id}")
+def character_image(character_id: int, w: int = Query(400, ge=100, le=1200), user=Depends(current_user)):
+    c = Character.objects.select_related("series__author__profile").filter(pk=character_id).first()
+    if not c:
+        raise HTTPException(404)
+    s = c.series
+    if s.status != "published" and not (user and user.pk == s.author_id):
+        raise HTTPException(404)
+    return _serve(c.image_url, w, _mark(s.author) if w >= 800 else None)
 
 
 @router.get("/img/u/{handle}/{kind}")

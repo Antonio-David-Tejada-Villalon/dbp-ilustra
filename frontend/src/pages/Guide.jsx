@@ -34,8 +34,8 @@ export default function Guide() {
       pide cuenta y suele subir más rápido que otros. <a href="https://postimages.org" target="_blank" rel="noopener noreferrer">postimages.org</a> es otra
       buena opción, también sin cuenta. Si uno anda lento en tu conexión un día, probá con el otro: la
       velocidad de subida varía según el servicio y el momento, no depende de DBP Ilustra.</p>
-      <p>Formatos aceptados: JPG, PNG, WEBP o GIF (si es animado, se muestra el primer cuadro), mínimo
-      200 píxeles de lado, máximo 15 MB.</p>
+      <p>Formatos aceptados: JPG, PNG, WEBP o GIF, mínimo 200 píxeles de lado, máximo 15 MB. Si subís un
+      GIF animado, se muestra animado en el sitio (hasta 50 cuadros).</p>
 
       <h2>3. Publicar un cómic, manga o historieta (con capítulos)</h2>
       <ol>
@@ -45,6 +45,19 @@ export default function Guide() {
         primero, después la 2, etc.). Hasta 80 páginas por capítulo.</li>
         <li>Para agregar más capítulos después, volvé a Publicar → «Capítulo» y elegí la serie.</li>
       </ol>
+
+      <h2>3.1. Personajes, viñetas de texto y narración por voz</h2>
+      <p>Estas opciones aparecen solo en tus propias series y capítulos:</p>
+      <ul>
+        <li><strong>Personajes:</strong> en la página de tu serie, «Agregar personaje» — nombre, imagen
+        (puede ser un GIF) y una voz sugerida (grave, aguda o neutra) para cuando se narre sus diálogos.</li>
+        <li><strong>Viñetas de texto:</strong> abrí un capítulo tuyo y tocá «Editar viñetas». Elegí una
+        página, agregá el texto del diálogo, su posición (X/Y en % de la imagen) y, si querés, el
+        personaje que lo dice y un enlace directo a un sonido (SFX) que se reproduce junto con esa viñeta.</li>
+        <li><strong>Narración:</strong> con viñetas cargadas, aparece el botón «Narrar capítulo» — lee
+        todas las viñetas en voz alta con la voz del dispositivo de quien lee, siguiendo la voz de cada
+        personaje. Cualquiera puede tocar una viñeta suelta para escuchar solo esa línea.</li>
+      </ul>
 
       <h2>4. Cómo se protegen tus obras</h2>
       <p>El sitio <strong>nunca</strong> muestra el enlace original de tu imagen: siempre la sirve

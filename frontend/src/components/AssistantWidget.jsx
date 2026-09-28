@@ -3,18 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { AssistantPanel, Icon } from "../ds/ilustra";
+import { hasTTS, pickVoice } from "../voice";
 
 const START = ["¿Cómo publico mi obra?", "Artistas nuevos", "Proyectos DBP"];
 const SpeechRecognitionApi = typeof window !== "undefined" ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
-const hasTTS = typeof window !== "undefined" && "speechSynthesis" in window;
-
-/** Elige una voz en español, prefiriendo una de Google si el dispositivo la tiene instalada. */
-function pickVoice() {
-  const voices = window.speechSynthesis.getVoices();
-  return voices.find((v) => /^es/i.test(v.lang) && /google/i.test(v.name))
-    || voices.find((v) => /^es/i.test(v.lang))
-    || null;
-}
 
 export default function AssistantWidget() {
   const { config } = useAuth();

@@ -5,10 +5,12 @@ import { useAuth } from "../auth";
 import { Avatar, Button, CategoryTag, ProtectedImage } from "../ds/ilustra";
 import { useApi, useTitle } from "../hooks";
 import { useToast } from "../toast";
+import HelpTip from "../components/HelpTip";
 import ImageUrlField from "../components/ImageUrlField";
 import { Empty, ErrorState, Loading } from "../components/States";
 
 const SCATS = [["comic", "Cómic"], ["manga", "Manga"], ["historieta", "Historieta"]];
+const VOICES = [["", "Automática"], ["grave", "Grave"], ["aguda", "Aguda"], ["neutra", "Neutra"]];
 
 function EditForm({ s, onSaved, onCancel }) {
   const toast = useToast();
@@ -46,6 +48,96 @@ function EditForm({ s, onSaved, onCancel }) {
         <Button type="submit" disabled={busy || !valid || !f.title.trim()}>{busy ? "Guardando…" : "Guardar cambios"}</Button>
       </div>
     </form>
+  );
+}
+
+function CharacterForm({ seriesId, character, onSaved, onCancel }) {
+  const toast = useToast();
+  const [f, setF] = useState({ name: character?.name || "", description: character?.description || "", image_url: character?.image || "", voice: character?.voice || "" });
+  const [valid, setValid] = useState(!!character);
+  const [busy, setBusy] = useState(false);
+  const set = (k) => (e) => setF({ ...f, [k]: e && e.target ? e.target.value : e });
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const body = { ...f };
+      if (character && body.image_url === character.image) delete body.image_url;
+      const saved = character
+        ? await api.patch(`/series/${seriesId}/characters/${character.id}`, body)
+        : await api.post(`/series/${seriesId}/characters`, body);
+      toast(character ? "Personaje actualizado." : "Personaje agregado.", "ok");
+      onSaved(saved);
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form className="app-form app-character-form" onSubmit={submit}>
+      <div><label className="form-label body-strong" htmlFor="ch-n">Nombre</label>
+        <input id="ch-n" className="form-control" required maxLength={80} value={f.name} onChange={set("name")} /></div>
+      <ImageUrlField id="ch-img" label="Imagen (podés usar un GIF animado)" value={f.image_url} onChange={set("image_url")} onValid={(v) => setValid(!!v)}
+        hint={character ? "Dejala igual si no querés cambiar la imagen." : undefined} />
+      <div><label className="form-label body-strong" htmlFor="ch-d">Descripción</label>
+        <input id="ch-d" className="form-control" maxLength={300} value={f.description} onChange={set("description")} placeholder="Quién es, cómo habla…" /></div>
+      <div><label className="form-label body-strong" htmlFor="ch-v">Voz para narrar sus diálogos</label>
+        <select id="ch-v" className="form-select" value={f.voice} onChange={set("voice")}>{VOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+      <div className="d-flex gap-2 justify-content-end">
+        <Button type="button" variant="secondary" onClick={onCancel} disabled={busy}>Cancelar</Button>
+        <Button type="submit" disabled={busy || !valid || !f.name.trim()}>{busy ? "Guardando…" : "Guardar"}</Button>
+      </div>
+    </form>
+  );
+}
+
+function Characters({ seriesId, characters, own, onChange }) {
+  const toast = useToast();
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const remove = async (c) => {
+    if (!window.confirm(`¿Eliminar a ${c.name} del casting?`)) return;
+    try { await api.del(`/series/${seriesId}/characters/${c.id}`); onChange(characters.filter((x) => x.id !== c.id)); }
+    catch (e) { toast(e.message, "error"); }
+  };
+  if (!own && characters.length === 0) return null;
+  return (
+    <section>
+      <div className="d-flex align-items-center gap-2">
+        <h2 className="title-lg m-0">Personajes</h2>
+        <HelpTip title="Casting de personajes">
+          <p>Presentá a los personajes de tu serie con una imagen (o un GIF animado) y una voz sugerida.</p>
+          <p className="m-0">Esa voz se usa cuando alguien toca "Narrar" en el lector y ese personaje tiene una viñeta de diálogo.</p>
+        </HelpTip>
+      </div>
+      {characters.length === 0 ? <Empty title="Todavía no agregaste personajes" /> : (
+        <div className="app-characters">
+          {characters.map((c) => (
+            <article key={c.id} className="app-character-card">
+              <ProtectedImage src={img(c.image, 400)} ratio={c.ratio} rounded alt={c.name} />
+              <div className="app-character-name">{c.name}</div>
+              {c.description && <p className="caption text-muted-ink m-0">{c.description}</p>}
+              {own && (
+                <div className="d-flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => setEditing(c)}>Editar</Button>
+                  <Button size="sm" variant="secondary" onClick={() => remove(c)}>Eliminar</Button>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+      {own && !adding && <Button size="sm" variant="secondary" icon="plus" onClick={() => setAdding(true)}>Agregar personaje</Button>}
+      {own && adding && (
+        <CharacterForm seriesId={seriesId} onCancel={() => setAdding(false)}
+          onSaved={(c) => { onChange([...characters, c]); setAdding(false); }} />
+      )}
+      {own && editing && (
+        <CharacterForm seriesId={seriesId} character={editing} onCancel={() => setEditing(null)}
+          onSaved={(c) => { onChange(characters.map((x) => (x.id === c.id ? c : x))); setEditing(null); }} />
+      )}
+    </section>
   );
 }
 
@@ -119,6 +211,8 @@ export default function Series() {
           </ol>
         )}
       </section>
+      <Characters seriesId={s.id} characters={s.characters || []} own={s.own}
+        onChange={(list) => setData((d) => ({ ...d, characters: list }))} />
     </div>
   );
 }

@@ -15,6 +15,7 @@ CATEGORY_CHOICES = [
 SERIES_CATEGORY_CHOICES = [("comic", "Cómic"), ("manga", "Manga"), ("historieta", "Historieta")]
 ACCENT_CHOICES = [("violet", "Violeta"), ("yellow", "Amarillo"), ("sky", "Celeste"), ("coral", "Coral")]
 STATUS_CHOICES = [("published", "Publicada"), ("hidden", "Oculta por moderación")]
+VOICE_CHOICES = [("", "Automática"), ("grave", "Grave"), ("aguda", "Aguda"), ("neutra", "Neutra")]
 
 handle_validator = RegexValidator(r"^[a-z0-9._]{3,30}$", "Usá de 3 a 30 caracteres: minúsculas, números, punto o guion bajo.")
 
@@ -124,6 +125,8 @@ class ChapterPage(models.Model):
     image_url = models.CharField(max_length=1000)
     width = models.PositiveIntegerField(default=0)
     height = models.PositiveIntegerField(default=0)
+    overlays = models.JSONField("viñetas de texto", default=list, blank=True,
+                                help_text="Globos de diálogo: [{id, x, y, w, text, character, voice, sfx}, …]")
 
     class Meta:
         ordering = ["chapter", "order"]
@@ -133,6 +136,31 @@ class ChapterPage(models.Model):
     @property
     def ratio(self):
         return round(self.width / self.height, 4) if self.width and self.height else 0.7
+
+
+class Character(models.Model):
+    """Personaje de una serie: nombre, imagen (o GIF) y una voz sugerida para la narración."""
+    series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name="characters")
+    name = models.CharField("nombre", max_length=80)
+    description = models.CharField("descripción", max_length=300, blank=True)
+    image_url = models.CharField("imagen", max_length=1000)
+    width = models.PositiveIntegerField(default=0)
+    height = models.PositiveIntegerField(default=0)
+    voice = models.CharField("voz", max_length=10, choices=VOICE_CHOICES, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+        verbose_name = "personaje"
+        verbose_name_plural = "personajes"
+
+    def __str__(self):
+        return f"{self.name} ({self.series})"
+
+    @property
+    def ratio(self):
+        return round(self.width / self.height, 4) if self.width and self.height else 1.0
 
 
 class Like(models.Model):

@@ -4,8 +4,8 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import (FAQ, Artwork, Chapter, ChapterPage, Comment, ModeratorScope, Notification, Profile, Project,
-                     Report, Series)
+from .models import (FAQ, Artwork, Chapter, ChapterPage, Character, Comment, ModeratorScope, Notification, Profile,
+                     Project, Report, Series)
 from .moderation import category_filter, scope_of
 
 User = get_user_model()
@@ -78,13 +78,19 @@ class ChapterInline(admin.TabularInline):
     show_change_link = True
 
 
+class CharacterInline(admin.TabularInline):
+    model = Character
+    extra = 0
+    fields = ("order", "name", "description", "image_url", "voice")
+
+
 @admin.register(Series)
 class SeriesAdmin(ScopedAdmin):
     category_field = "category"
     list_display = ("title", "author", "category", "status", "updated")
     list_filter = ("status", "category")
     search_fields = ("title", "author__profile__handle")
-    inlines = [ChapterInline]
+    inlines = [ChapterInline, CharacterInline]
     actions = [hide, publish]
 
 

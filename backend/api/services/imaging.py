@@ -15,7 +15,8 @@ from .safefetch import fetch_image
 
 WIDTHS = (400, 800, 1200, 1600)
 FONT_PATH = Path(__file__).resolve().parent.parent.parent / "assets" / "PlusJakartaSans-700.ttf"
-CACHE_VERSION = "v1"
+CACHE_VERSION = "v2"
+MAX_FRAMES = 50  # tope de cuadros para GIFs/WEBP animados: el servidor tiene CPU muy limitada
 
 
 def pick_width(requested: int | None) -> int:
@@ -58,20 +59,29 @@ def demo_art(seed: int, w: int, h: int) -> Image.Image:
     return im
 
 
-def _load_source(source: str) -> Image.Image:
-    if source.startswith("demo:"):
-        _, seed, size = source.split(":")
-        w, h = (int(x) for x in size.split("x"))
-        return demo_art(int(seed), w, h)
-    fetched = fetch_image(source)
-    im = Image.open(io.BytesIO(fetched.data))
-    im = ImageOps.exif_transpose(im)
-    if getattr(im, "is_animated", False):
-        im.seek(0)
+def _prep_frame(im: Image.Image) -> Image.Image:
     return im.convert("RGBA") if im.mode in ("P", "LA", "RGBA") else im.convert("RGB")
 
 
-def _watermark(im: Image.Image, text: str) -> Image.Image:
+def _load_frames(source: str) -> list[tuple[Image.Image, int]]:
+    """Devuelve [(cuadro, duración_ms), …]. Para imágenes fijas, una sola tupla con duración 0."""
+    if source.startswith("demo:"):
+        _, seed, size = source.split(":")
+        w, h = (int(x) for x in size.split("x"))
+        return [(demo_art(int(seed), w, h), 0)]
+    fetched = fetch_image(source)
+    im = Image.open(io.BytesIO(fetched.data))
+    n = min(getattr(im, "n_frames", 1), MAX_FRAMES)
+    if n <= 1:
+        return [(_prep_frame(ImageOps.exif_transpose(im)), 0)]
+    frames = []
+    for i in range(n):
+        im.seek(i)
+        frames.append((_prep_frame(im.copy()), im.info.get("duration") or 100))
+    return frames
+
+
+def _watermark(im: Image.Image, text: str, tiled: bool = True) -> Image.Image:
     im = im.convert("RGBA")
     w, h = im.size
     layer = Image.new("RGBA", im.size, (0, 0, 0, 0))
@@ -82,16 +92,17 @@ def _watermark(im: Image.Image, text: str) -> Image.Image:
         tile_font = ImageFont.truetype(str(FONT_PATH), max(14, int(w * 0.035)))
     except OSError:
         font = tile_font = ImageFont.load_default()
-    # marca tenue repetida en diagonal
-    tile = Image.new("RGBA", (w * 2, h * 2), (0, 0, 0, 0))
-    td = ImageDraw.Draw(tile)
-    step_x, step_y = int(w * 0.55), int(h * 0.22) or 60
-    for yy in range(0, h * 2, step_y):
-        for xx in range(-(yy // 3) % step_x - step_x, w * 2, step_x):
-            td.text((xx, yy), text, font=tile_font, fill=(255, 255, 255, 26))
-    tile = tile.rotate(28, resample=Image.BICUBIC)
-    left, top = (tile.width - w) // 2, (tile.height - h) // 2
-    layer.alpha_composite(tile.crop((left, top, left + w, top + h)))
+    # marca tenue repetida en diagonal (se omite en cuadros de animación por costo de CPU)
+    if tiled:
+        tile = Image.new("RGBA", (w * 2, h * 2), (0, 0, 0, 0))
+        td = ImageDraw.Draw(tile)
+        step_x, step_y = int(w * 0.55), int(h * 0.22) or 60
+        for yy in range(0, h * 2, step_y):
+            for xx in range(-(yy // 3) % step_x - step_x, w * 2, step_x):
+                td.text((xx, yy), text, font=tile_font, fill=(255, 255, 255, 26))
+        tile = tile.rotate(28, resample=Image.BICUBIC)
+        left, top = (tile.width - w) // 2, (tile.height - h) // 2
+        layer.alpha_composite(tile.crop((left, top, left + w, top + h)))
     # firma nítida abajo a la derecha
     bbox = d.textbbox((0, 0), text, font=font)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
@@ -102,18 +113,28 @@ def _watermark(im: Image.Image, text: str) -> Image.Image:
 
 
 def render(source: str, width: int, watermark: str | None) -> Path:
-    """Devuelve la ruta del WEBP en caché (lo genera si no existe)."""
+    """Devuelve la ruta del WEBP en caché (lo genera si no existe). Si el origen es un GIF/WEBP
+    animado, el resultado también queda animado (hasta MAX_FRAMES cuadros)."""
     width = pick_width(width)
     path = _cache_path(f"{CACHE_VERSION}|{source}|{width}|{watermark or ''}")
     if path.exists():
         return path
-    im = _load_source(source)
-    if im.width > width:
-        im = im.resize((width, max(1, round(im.height * width / im.width))), Image.LANCZOS)
-    if watermark:
-        im = _watermark(im, watermark)
+    frames = _load_frames(source)
+    animated = len(frames) > 1
+    out = []
+    for im, dur in frames:
+        if im.width > width:
+            im = im.resize((width, max(1, round(im.height * width / im.width))), Image.LANCZOS)
+        if watermark:
+            im = _watermark(im, watermark, tiled=not animated)
+        out.append((im, dur))
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
-    im.save(tmp, "WEBP", quality=82, method=4)
+    if animated:
+        first, rest = out[0][0], [f for f, _ in out[1:]]
+        durations = [d for _, d in out]
+        first.save(tmp, "WEBP", save_all=True, append_images=rest, duration=durations, loop=0, quality=76, method=4)
+    else:
+        out[0][0].save(tmp, "WEBP", quality=82, method=4)
     tmp.replace(path)
     return path

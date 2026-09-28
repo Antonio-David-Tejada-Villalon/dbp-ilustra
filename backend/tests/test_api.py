@@ -166,3 +166,103 @@ def test_asistente_usa_contexto(client, settings, monkeypatch):
     r = client.post("/api/assistant", json={"message": "busco obras de sierra"}).json()
     assert f"/obra/{a.pk}" in r["links"]
     assert "OBRA «Sierra»" in seen["system"]
+
+
+# ---------- personajes y viñetas ----------
+def _series_for(c):
+    c.patch("/api/me/profile", json={"is_artist": True}, headers=H)
+    body = {"title": "Universo", "category": "comic", "cover_url": "https://example.com/cover.png"}
+    r = c.post("/api/series", json=body, headers=H)
+    assert r.status_code == 201, r.text
+    return r.json()["id"]
+
+
+def test_personajes_crud(login, fake_fetch):
+    c = login()
+    sid = _series_for(c)
+    body = {"name": "Lara", "description": "La protagonista", "image_url": "https://example.com/lara.png", "voice": "aguda"}
+    r = c.post(f"/api/series/{sid}/characters", json=body, headers=H)
+    assert r.status_code == 201, r.text
+    data = r.json()
+    assert data["name"] == "Lara" and data["voice"] == "aguda"
+    assert re.fullmatch(rf"/api/img/c/{data['id']}\?v=[0-9a-f]{{10}}", data["image"])
+
+    r = c.patch(f"/api/series/{sid}/characters/{data['id']}", json={"description": "Editado"}, headers=H)
+    assert r.status_code == 200 and r.json()["description"] == "Editado"
+
+    got = c.get(f"/api/series/{sid}").json()
+    assert got["characters"][0]["description"] == "Editado"
+
+    assert c.delete(f"/api/series/{sid}/characters/{data['id']}", headers=H).json() == {"ok": True}
+    assert c.get(f"/api/series/{sid}").json()["characters"] == []
+
+
+def test_personaje_de_otro_no_se_puede_editar(login, fake_fetch):
+    c = login(sub="a1", email="a1@example.com")
+    sid = _series_for(c)
+    other = login(sub="a2", email="a2@example.com")
+    r = other.post(f"/api/series/{sid}/characters",
+                    json={"name": "Intruso", "image_url": "https://example.com/x.png", "voice": ""}, headers=H)
+    assert r.status_code == 404
+
+
+def test_viñetas_de_pagina(login, fake_fetch):
+    c = login()
+    sid = _series_for(c)
+    r = c.post(f"/api/series/{sid}/chapters", json={"title": "Cap 1", "pages": ["https://example.com/p1.png"]}, headers=H)
+    assert r.status_code == 201, r.text
+    ch = c.get(f"/api/series/{sid}/chapters/1").json()
+    page_id = ch["pages"][0]["id"]
+
+    char = c.post(f"/api/series/{sid}/characters",
+                  json={"name": "Lara", "image_url": "https://example.com/lara.png", "voice": "aguda"}, headers=H).json()
+
+    overlay = {"id": "o1", "x": 10.5, "y": 20, "w": 30, "text": "¡Cuidado!", "character": char["id"],
+               "voice": "", "sfx": "https://example.com/grito.mp3"}
+    r = c.patch(f"/api/series/{sid}/chapters/1/pages/{page_id}", json={"overlays": [overlay]}, headers=H)
+    assert r.status_code == 200, r.text
+    assert r.json()["overlays"][0]["text"] == "¡Cuidado!"
+
+    ch2 = c.get(f"/api/series/{sid}/chapters/1").json()
+    assert ch2["pages"][0]["overlays"][0]["sfx"] == "https://example.com/grito.mp3"
+    assert ch2["characters"][0]["name"] == "Lara"
+
+
+def test_viñeta_rechaza_sfx_no_https(login, fake_fetch):
+    c = login()
+    sid = _series_for(c)
+    c.post(f"/api/series/{sid}/chapters", json={"title": "Cap 1", "pages": ["https://example.com/p1.png"]}, headers=H)
+    page_id = c.get(f"/api/series/{sid}/chapters/1").json()["pages"][0]["id"]
+    overlay = {"id": "o1", "x": 0, "y": 0, "w": 30, "text": "hola", "sfx": "http://evil.example/x.mp3"}
+    r = c.patch(f"/api/series/{sid}/chapters/1/pages/{page_id}", json={"overlays": [overlay]}, headers=H)
+    assert r.status_code == 422
+
+
+def test_viñeta_rechaza_personaje_de_otra_serie(login, fake_fetch):
+    c = login()
+    sid1 = _series_for(c)
+    r = c.post("/api/series", json={"title": "Otra", "category": "comic", "cover_url": "https://example.com/o.png"}, headers=H)
+    sid2 = r.json()["id"]
+    char = c.post(f"/api/series/{sid2}/characters",
+                  json={"name": "Ajeno", "image_url": "https://example.com/a.png", "voice": ""}, headers=H).json()
+    c.post(f"/api/series/{sid1}/chapters", json={"title": "Cap 1", "pages": ["https://example.com/p1.png"]}, headers=H)
+    page_id = c.get(f"/api/series/{sid1}/chapters/1").json()["pages"][0]["id"]
+    overlay = {"id": "o1", "x": 0, "y": 0, "w": 30, "text": "hola", "character": char["id"]}
+    r = c.patch(f"/api/series/{sid1}/chapters/1/pages/{page_id}", json={"overlays": [overlay]}, headers=H)
+    assert r.status_code == 422
+
+
+# ---------- animación ----------
+def test_render_conserva_animacion(settings, tmp_path, monkeypatch):
+    from api.services import imaging, safefetch
+    settings.IMAGE_CACHE_DIR = tmp_path / "cache"
+    from PIL import Image
+    import io as _io
+    frames = [Image.new("RGB", (300, 200), (i * 40, 100, 200)) for i in range(5)]
+    buf = _io.BytesIO()
+    frames[0].save(buf, "GIF", save_all=True, append_images=frames[1:], duration=80, loop=0)
+    gif_bytes = buf.getvalue()
+    monkeypatch.setattr(imaging, "fetch_image", lambda url: safefetch.FetchedImage(data=gif_bytes, width=300, height=200, format="GIF"))
+    path = imaging.render("https://example.com/anim.gif", 800, None)
+    out = Image.open(path)
+    assert out.format == "WEBP" and getattr(out, "is_animated", False) and out.n_frames == 5

@@ -5,7 +5,8 @@ from django.db.models import F, Max, Q
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from ilustra.models import SERIES_CATEGORY_CHOICES, Chapter, ChapterPage, Follow, Like, Series
+from ilustra.models import (SERIES_CATEGORY_CHOICES, VOICE_CHOICES, Chapter, ChapterPage, Character, Follow, Like,
+                            Series)
 
 from .. import serialize
 from ..deps import artist, current_user, writer
@@ -15,7 +16,23 @@ from ..services.safefetch import ImageURLError, fetch_image
 
 router = APIRouter(tags=["series"])
 SCATS = {k for k, _ in SERIES_CATEGORY_CHOICES}
+VOICES = {k for k, _ in VOICE_CHOICES}
 MAX_PAGES = 80
+MAX_CHARACTERS = 30
+MAX_OVERLAYS = 24
+
+
+def _external_url(url: str | None) -> str | None:
+    """Enlace externo que el navegador pide directo (audio de SFX): no lo descarga el servidor,
+    así que solo valida forma — no hace falta la verificación SSRF de las imágenes que sí proxeamos."""
+    if not url:
+        return None
+    url = url.strip()
+    if not url:
+        return None
+    if not url.startswith("https://") or len(url) > 1000:
+        raise HTTPException(422, "El enlace de sonido debe empezar con https://")
+    return url
 
 
 def visible_series(user=None):
@@ -46,6 +63,7 @@ def get_series(series_id: int, user=Depends(current_user)):
     d = serialize.series(s, chapters)
     d["own"] = bool(user and user.pk == s.author_id)
     d["following"] = bool(user and Follow.objects.filter(follower=user, following=s.author).exists())
+    d["characters"] = [serialize.character(c, s.author) for c in s.characters.all()]
     if d["own"]:
         d["coverUrl"] = s.cover_url  # solo el autor ve su enlace original
     return d
@@ -104,6 +122,70 @@ def update_series(series_id: int, body: SeriesPatch, user=Depends(writer)):
             setattr(s, k, v.strip() if isinstance(v, str) and k != "cover_url" else v)
     s.save()
     return serialize.series(s, s.chapters.all())
+
+
+class CharacterIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    description: str = Field("", max_length=300)
+    image_url: str = Field(max_length=1000)
+    voice: str = Field("")
+
+
+class CharacterPatch(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=80)
+    description: str | None = Field(None, max_length=300)
+    image_url: str | None = Field(None, max_length=1000)
+    voice: str | None = None
+    order: int | None = None
+
+
+@router.post("/series/{series_id}/characters", status_code=201)
+def add_character(series_id: int, body: CharacterIn, user=Depends(writer)):
+    s = own_series(series_id, user)
+    if s.characters.count() >= MAX_CHARACTERS:
+        raise HTTPException(422, f"Máximo {MAX_CHARACTERS} personajes por serie.")
+    if body.voice not in VOICES:
+        raise HTTPException(422, "Voz no válida.")
+    ratelimit.check("publish", f"u{user.pk}", 30, 3600)
+    try:
+        img = fetch_image(body.image_url)
+    except ImageURLError as e:
+        raise HTTPException(422, f"Imagen: {e}")
+    c = Character.objects.create(series=s, name=body.name.strip(), description=body.description.strip(),
+                                 image_url=body.image_url.strip(), width=img.width, height=img.height,
+                                 voice=body.voice, order=s.characters.count())
+    return serialize.character(c, user)
+
+
+@router.patch("/series/{series_id}/characters/{character_id}")
+def update_character(series_id: int, character_id: int, body: CharacterPatch, user=Depends(writer)):
+    s = own_series(series_id, user)
+    c = s.characters.filter(pk=character_id).first()
+    if not c:
+        raise HTTPException(404, "No encontramos ese personaje entre los tuyos.")
+    data = body.model_dump(exclude_unset=True)
+    if "voice" in data and data["voice"] not in VOICES:
+        raise HTTPException(422, "Voz no válida.")
+    if data.get("image_url"):
+        try:
+            img = fetch_image(data["image_url"])
+        except ImageURLError as e:
+            raise HTTPException(422, f"Imagen: {e}")
+        data["width"], data["height"] = img.width, img.height
+        data["image_url"] = data["image_url"].strip()
+    for k, v in data.items():
+        if v is not None:
+            setattr(c, k, v.strip() if isinstance(v, str) and k != "image_url" else v)
+    c.save()
+    return serialize.character(c, user)
+
+
+@router.delete("/series/{series_id}/characters/{character_id}")
+def delete_character(series_id: int, character_id: int, user=Depends(writer)):
+    n, _ = Character.objects.filter(pk=character_id, series_id=series_id, series__author=user).delete()
+    if not n:
+        raise HTTPException(404, "No encontramos ese personaje entre los tuyos.")
+    return {"ok": True}
 
 
 class ChapterIn(BaseModel):
@@ -167,7 +249,8 @@ def get_chapter(series_id: int, number: int, user=Depends(current_user)):
     return {
         "series": serialize.series(s), "number": ch.number, "title": ch.title, "id": ch.pk,
         "pages": [{"id": p.pk, "image": f"/api/img/p/{p.pk}?v={serialize.img_version(p.image_url, s.author)}", "ratio": p.ratio,
-                   **({"url": p.image_url} if own else {})} for p in ch.pages.all()],
+                   "overlays": p.overlays, **({"url": p.image_url} if own else {})} for p in ch.pages.all()],
+        "characters": [serialize.character(c, s.author) for c in s.characters.all()],
         "prev": prev, "next": nxt, "likes": ch.like_count, "comments": ch.comment_count,
         "liked": bool(user and Like.objects.filter(user=user, chapter=ch).exists()),
         "following": bool(user and Follow.objects.filter(follower=user, following=s.author).exists()),
@@ -224,6 +307,41 @@ def update_chapter(series_id: int, number: int, body: ChapterPatch, user=Depends
     ch.save()
     s.save(update_fields=["updated"])
     return {"series": s.pk, "number": ch.number}
+
+
+class OverlayIn(BaseModel):
+    id: str = Field(min_length=1, max_length=40)
+    x: float = Field(ge=0, le=100)
+    y: float = Field(ge=0, le=100)
+    w: float = Field(8, ge=8, le=90)
+    text: str = Field(min_length=1, max_length=300)
+    character: int | None = None
+    voice: str = ""
+    sfx: str | None = Field(None, max_length=1000)
+
+
+class PageOverlaysIn(BaseModel):
+    overlays: list[OverlayIn] = Field(max_length=MAX_OVERLAYS)
+
+
+@router.patch("/series/{series_id}/chapters/{number}/pages/{page_id}")
+def update_page_overlays(series_id: int, number: int, page_id: int, body: PageOverlaysIn, user=Depends(writer)):
+    s = Series.objects.filter(pk=series_id, author=user).first()
+    if not s:
+        raise HTTPException(404, "No encontramos esa serie entre las tuyas.")
+    page = ChapterPage.objects.filter(pk=page_id, chapter__series=s, chapter__number=number).first()
+    if not page:
+        raise HTTPException(404, "No encontramos esa página entre las tuyas.")
+    char_ids = {o.character for o in body.overlays if o.character is not None}
+    if char_ids and s.characters.filter(pk__in=char_ids).count() != len(char_ids):
+        raise HTTPException(422, "Uno de los personajes no pertenece a esta serie.")
+    for o in body.overlays:
+        if o.voice not in VOICES:
+            raise HTTPException(422, "Voz no válida.")
+        _external_url(o.sfx)
+    page.overlays = [o.model_dump() for o in body.overlays]
+    page.save(update_fields=["overlays"])
+    return {"overlays": page.overlays}
 
 
 @router.delete("/series/{series_id}/chapters/{number}")
