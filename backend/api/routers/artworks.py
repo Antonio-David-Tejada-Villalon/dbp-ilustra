@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.db import IntegrityError, transaction
 from django.db.models import Count, F, Q
 from django.utils import timezone
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from ilustra.models import CATEGORY_CHOICES, Artwork, Follow, Like, Save
@@ -78,20 +78,6 @@ def get_artwork(artwork_id: int, user=Depends(current_user)):
     if data["own"]:
         data["imageUrl"] = a.image_url  # solo el autor ve su enlace original
     return data
-
-
-class ImageCheckIn(BaseModel):
-    url: str = Field(max_length=1000)
-
-
-@router.post("/images/check")
-def check_image(body: ImageCheckIn, request: Request, user=Depends(writer)):
-    ratelimit.check("imgcheck", f"u{user.pk}", 60, 600)
-    try:
-        img = fetch_image(body.url)
-    except ImageURLError as e:
-        raise HTTPException(422, str(e))
-    return {"ok": True, "width": img.width, "height": img.height, "ratio": round(img.width / img.height, 4)}
 
 
 class ArtworkIn(BaseModel):
